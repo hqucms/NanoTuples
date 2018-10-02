@@ -32,7 +32,7 @@ cp -r /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/data-RecoBTag-Combined/V01-00-14/
 ### Get customized NanoAOD producers for HeavyResTagging
 
 ```bash
-git clone ??? PhysicsTools/NanoTuples
+git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples
 ```
 
 ### Compile

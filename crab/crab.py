@@ -26,6 +26,7 @@ def parseDatasetName(dataset):
         vername = '_'.join(ver_pieces[:keep_idx]) + '_' + rlt[0] + rlt[2] + ext
     else:
         vername = ver
+        ext = '_' + ver
     return procname, vername, ext, isMC
 
 
