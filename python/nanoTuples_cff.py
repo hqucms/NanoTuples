@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import Var
-from PhysicsTools.NanoTuples.ca15_cff import setupCA15
+# from PhysicsTools.NanoTuples.ca15_cff import setupCA15
+from PhysicsTools.NanoTuples.ak15_cff import setupAK15
 
 
 def nanoTuples_customizeVectexTable(process):
@@ -20,7 +21,8 @@ def nanoTuples_customizeVectexTable(process):
 
 
 def nanoTuples_customizeCommon(process, runOnMC):
-    setupCA15(process, runOnMC=runOnMC)
+#     setupCA15(process, runOnMC=runOnMC)
+    setupAK15(process, runOnMC=runOnMC)
     nanoTuples_customizeVectexTable(process)
 
     process.jetTables.remove(process.saJetTable)
