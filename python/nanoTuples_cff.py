@@ -35,7 +35,7 @@ def nanoTuples_customizeCommon(process, runOnMC):
 def nanoTuples_customizeData(process):
     process = nanoTuples_customizeCommon(process, False)
 
-    process.NANOAODoutput.saveProvenance = cms.untracked.bool(False)
+#     process.NANOAODoutput.saveProvenance = cms.untracked.bool(False)
     process.NANOAODoutput.fakeNameForCrab = cms.untracked.bool(True)  # hack for crab publication
 
     return process
@@ -50,7 +50,7 @@ def nanoTuples_customizeMC(process):
 #     process.nanoSequenceMC.remove(process.particleLevelTables)
 #     process.nanoSequenceMC.remove(process.ttbarCategoryTable)
 
-    process.NANOAODSIMoutput.saveProvenance = cms.untracked.bool(False)
+#     process.NANOAODSIMoutput.saveProvenance = cms.untracked.bool(False)
     process.NANOAODSIMoutput.fakeNameForCrab = cms.untracked.bool(True)  # hack for crab publication
 
     return process
