@@ -203,8 +203,8 @@ def main():
                         help='Job splitting method. Default: %(default)s'
                         )
     parser.add_argument('-n', '--units-per-job',
-                        default=480, type=int,
-                        help='Units per job. The meaning depends on the splitting. Default: %(default)d'
+                        default=300, type=int,
+                        help='Units per job. The meaning depends on the splitting. Recommended default numbers: (Automatic: 300 min, LumiBased:100, EventAwareLumiBased:100000) Default: %(default)d'
                         )
     parser.add_argument('-t', '--tag',
                         default='NanoHRT',

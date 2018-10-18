@@ -38,22 +38,39 @@ def nanoTuples_customizeCommon(process, runOnMC):
 def nanoTuples_customizeData(process):
     process = nanoTuples_customizeCommon(process, False)
 
-#     process.NANOAODoutput.saveProvenance = cms.untracked.bool(False)
     process.NANOAODoutput.fakeNameForCrab = cms.untracked.bool(True)  # hack for crab publication
+    return process
 
+
+def nanoTuples_customizeData_METMuEGClean(process):
+    process = nanoTuples_customizeCommon(process, False)
+
+    from PhysicsTools.PatUtils.tools.corMETFromMuonAndEG import corMETFromMuonAndEG
+    corMETFromMuonAndEG(process,
+                        pfCandCollection="",  # not needed
+                        electronCollection="slimmedElectronsBeforeGSFix",
+                        photonCollection="slimmedPhotonsBeforeGSFix",
+                        corElectronCollection="slimmedElectrons",
+                        corPhotonCollection="slimmedPhotons",
+                        allMETEGCorrected=True,
+                        muCorrection=False,
+                        eGCorrection=True,
+                        runOnMiniAOD=True,
+                        postfix="MuEGClean"
+                        )
+    process.slimmedMETsMuEGClean = process.slimmedMETs.clone()
+    process.slimmedMETsMuEGClean.src = cms.InputTag("patPFMetT1MuEGClean")
+    process.slimmedMETsMuEGClean.rawVariation = cms.InputTag("patPFMetRawMuEGClean")
+    process.slimmedMETsMuEGClean.t1Uncertainties = cms.InputTag("patPFMetT1%sMuEGClean")
+    del process.slimmedMETsMuEGClean.caloMET
+    process.metTable.src = cms.InputTag('slimmedMETsMuEGClean')
+
+    process.NANOAODoutput.fakeNameForCrab = cms.untracked.bool(True)  # hack for crab publication
     return process
 
 
 def nanoTuples_customizeMC(process):
     process = nanoTuples_customizeCommon(process, True)
 
-#     process.nanoSequenceMC.remove(process.particleLevelSequence)
-#     process.nanoSequenceMC.remove(process.tauMC)
-#     process.nanoSequenceMC.remove(process.ttbarCatMCProducers)
-#     process.nanoSequenceMC.remove(process.particleLevelTables)
-#     process.nanoSequenceMC.remove(process.ttbarCategoryTable)
-
-#     process.NANOAODSIMoutput.saveProvenance = cms.untracked.bool(False)
     process.NANOAODSIMoutput.fakeNameForCrab = cms.untracked.bool(True)  # hack for crab publication
-
     return process
