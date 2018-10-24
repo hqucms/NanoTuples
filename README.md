@@ -1,4 +1,4 @@
-# NanoHRT
+# NanoTuples (Custom NanoAOD ntuple producers for VHcc)
 
 ### Set up CMSSW
 
