@@ -69,6 +69,14 @@ def nanoTuples_customizeData_METMuEGClean(process):
     return process
 
 
+def nanoTuples_customizeData_METMuEGClean_saveTriggerPrescale(process):
+    process = nanoTuples_customizeData_METMuEGClean(process)
+    process.NANOAODoutput.outputCommands.append(
+        "keep patPackedTriggerPrescales_patTrigger__PAT",  # event data
+        )
+    return process
+
+
 def nanoTuples_customizeMC(process):
     process = nanoTuples_customizeCommon(process, True)
 

@@ -3,8 +3,8 @@
 ### Set up CMSSW
 
 ```bash
-cmsrel CMSSW_9_4_10
-cd CMSSW_9_4_10/src
+cmsrel CMSSW_9_4_11_cand2
+cd CMSSW_9_4_11_cand2/src
 cmsenv
 ```
 
@@ -17,18 +17,14 @@ cmsenv
 # run2_nanoAOD_94X2016.toModify(process, nanoAOD_addDeepFlavourTagFor94X2016) 
 ```
 
-### Set up DeepAK15
+### Apply changes on PhysicsTools/NanoAOD
 
 ```bash
-# MXNet
-scram setup /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_3_0_pre4/config/toolbox/slc6_amd64_gcc700/tools/selected/mxnet-predict.xml
-# get DeepAK8 PR
-###git cms-merge-topic -u hqucms:deep-boosted-jets-rebase-94X
-# this one contains also the updated EGM corrections for electron/photons
-git cms-merge-topic -u hqucms:deep-boosted-jets-94X-custom-nano
-git cms-addpkg RecoBTag/Combined
-mkdir RecoBTag/Combined/data
-cp -r /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/data-RecoBTag-Combined/V01-00-14/RecoBTag/Combined/data/DeepBoostedJet RecoBTag/Combined/data/ 
+# this one adds the trigger prescale
+git cms-merge-topic -u hqucms:custom-nano-94X-add-trigger-prescales
+
+# this one contains the updated EGM corrections for electron/photons (**only needed for legacy 2016**)
+# git cms-merge-topic -u hqucms:deep-boosted-jets-94X-custom-nano
 ```
 
 ### Get customized NanoAOD producers
@@ -45,10 +41,6 @@ scram b -j16
 
 ### Test
 
-```bash
-cd PhysicsTools/NanoHRT/test
-cmsRun nanoHRT_cfg.py
-```
 
 ### Production
 
@@ -66,6 +58,12 @@ Data (2016 ReReco):
 cmsDriver.py data -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 94X_dataRun2_v4 --step NANO --nThreads 4 --era Run2_2016,run2_miniAOD_80XLegacy --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData_METMuEGClean --filein file:step-1.root --fileout file:nano.root --no_exec
 
 # test file: /store/data/Run2016H/MET/MINIAOD/03Feb2017_ver3-v1/80000/2A9DE5C7-ADEA-E611-9F9C-008CFA111290.root
+```
+
+To add trigger prescales,
+
+```bash
+cmsDriver.py data -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 94X_dataRun2_v4 --step NANO --nThreads 4 --era Run2_2016,run2_miniAOD_80XLegacy --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData_METMuEGClean_saveTriggerPrescale --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 
