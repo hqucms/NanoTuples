@@ -71,8 +71,13 @@ def nanoTuples_customizeData_METMuEGClean(process):
 
 def nanoTuples_customizeData_METMuEGClean_saveTriggerPrescale(process):
     process = nanoTuples_customizeData_METMuEGClean(process)
-    process.NANOAODoutput.outputCommands.append(
-        "keep patPackedTriggerPrescales_patTrigger__PAT",  # event data
+    process.NANOAODoutput.outputCommands = cms.untracked.vstring(
+        'drop *',
+        "keep nanoaodFlatTable_*Table_*_*",  # event data
+        "keep edmTriggerResults_*_*_*",  # event data
+        "keep patPackedTriggerPrescales_patTrigger__PAT",  # add trigger prescale
+        "keep nanoaodMergeableCounterTable_*Table_*_*",  # accumulated per/run or per/lumi data
+        "keep nanoaodUniqueString_nanoMetadata_*_*",  # basic metadata
         )
     return process
 
