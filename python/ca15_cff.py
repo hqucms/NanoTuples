@@ -18,7 +18,7 @@ def setupCA15(process, runOnMC=False, path=None):
     JETCorrLevels = ['L2Relative', 'L3Absolute', 'L2L3Residual']
 
     from PhysicsTools.NanoTuples.jetToolbox_cff import jetToolbox
-    jetToolbox(process, 'ca15', 'dummySeq', 'out', associateTask=False,
+    jetToolbox(process, 'ca15', 'dummySeqCA15', 'out', associateTask=False,
                PUMethod='Puppi', JETCorrPayload='AK8PFPuppi', JETCorrLevels=JETCorrLevels,
                Cut='pt > 160.0 && abs(rapidity()) < 2.4',
                miniAOD=True, runOnMC=runOnMC,
@@ -46,8 +46,8 @@ def setupCA15(process, runOnMC=False, path=None):
     from PhysicsTools.NanoTuples.pfDeepBoostedJetPreprocessParamsCA15_cfi import pfDeepBoostedJetPreprocessParams as params
     process.pfDeepBoostedJetTagInfosCA15WithPuppiDaughters.jet_radius = 1.5
     process.pfMassDecorrelatedDeepBoostedJetTagsCA15WithPuppiDaughters.preprocessParams = params
-    process.pfMassDecorrelatedDeepBoostedJetTagsCA15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ca15/V0_94X/resnet-symbol.json'
-    process.pfMassDecorrelatedDeepBoostedJetTagsCA15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ca15/V0_94X/resnet-0063.params'
+    process.pfMassDecorrelatedDeepBoostedJetTagsCA15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ca15/V1_94X/resnet-symbol.json'
+    process.pfMassDecorrelatedDeepBoostedJetTagsCA15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ca15/V1_94X/resnet-0069.params'
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsCA15WithPuppiDaughters')
