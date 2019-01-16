@@ -31,6 +31,7 @@ def setupAK15(process, runOnMC=False, path=None):
         process.ak15GenJetsNoNuSoftDrop.jetPtMin = 100
 
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs as pfDeepBoostedJetTagsProbs
     from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfMassDecorrelatedDeepBoostedJetTagsProbs as pfMassDecorrelatedDeepBoostedJetTagsProbs
 
     updateJetCollection(
@@ -38,13 +39,18 @@ def setupAK15(process, runOnMC=False, path=None):
         jetSource=cms.InputTag('packedPatJetsAK15PFPuppiSoftDrop'),
         rParam=1.5,
         jetCorrections=('AK8PFPuppi', cms.vstring(['L2Relative', 'L3Absolute']), 'None'),
-        btagDiscriminators=bTagDiscriminators + pfMassDecorrelatedDeepBoostedJetTagsProbs,
+        btagDiscriminators=bTagDiscriminators + pfDeepBoostedJetTagsProbs + pfMassDecorrelatedDeepBoostedJetTagsProbs,
         postfix='AK15WithPuppiDaughters',
     )
 
     # configure DeepAK15
     from PhysicsTools.NanoTuples.pfDeepBoostedJetPreprocessParamsAK15_cfi import pfDeepBoostedJetPreprocessParams as params
     process.pfDeepBoostedJetTagInfosAK15WithPuppiDaughters.jet_radius = 1.5
+
+    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = params
+    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet-symbol.json'
+    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet.params'
+
     process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = params
     process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/resnet-symbol.json'
     process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/resnet.params'
@@ -118,6 +124,11 @@ def setupAK15(process, runOnMC=False, path=None):
     )
     run2_miniAOD_80XLegacy.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
     process.ak15Table.variables.pt.precision = 10
+
+    # add nominal taggers
+    for prob in pfDeepBoostedJetTagsProbs:
+        name = 'nn_' + prob.split(':')[1]
+        setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     # add Mass Decorrelated taggers
     for prob in pfMassDecorrelatedDeepBoostedJetTagsProbs:
