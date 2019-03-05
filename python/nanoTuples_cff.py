@@ -28,7 +28,7 @@ def nanoTuples_customizeCommon(process, runOnMC):
     from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     runMetCorAndUncFromMiniAOD(process, isData=not runOnMC)
 
-    process.jetTables.remove(process.saJetTable)
+#     process.jetTables.remove(process.saJetTable)
     process.jetTables.remove(process.fatJetTable)
     process.jetTables.remove(process.subJetTable)
 
