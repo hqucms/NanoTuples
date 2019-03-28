@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
+from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
 
 # ---------------------------------------------------------
 
@@ -74,7 +75,8 @@ def setupAK15(process, runOnMC=False, path=None):
         ),
         src=srcJets
     )
-    run2_miniAOD_80XLegacy.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER16")
+    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+        modifier.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER16")
 
     process.tightJetIdLepVetoAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
         filterParams=cms.PSet(
@@ -92,10 +94,11 @@ def setupAK15(process, runOnMC=False, path=None):
             tightIdLepVeto=cms.InputTag("tightJetIdLepVetoAK15Puppi"),
         ),
     )
-    run2_miniAOD_80XLegacy.toModify(process.ak15WithUserData.userInts,
-        looseId=cms.InputTag("looseJetIdAK15Puppi"),
-        tightIdLepVeto=None,
-    )
+    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+        modifier.toModify(process.ak15WithUserData.userInts,
+            looseId=cms.InputTag("looseJetIdAK15Puppi"),
+            tightIdLepVeto=None,
+        )
 
     process.ak15Table = cms.EDProducer("SimpleCandidateFlatTableProducer",
         src=cms.InputTag("ak15WithUserData"),
@@ -122,7 +125,8 @@ def setupAK15(process, runOnMC=False, path=None):
                  doc="index of second subjet"),
         )
     )
-    run2_miniAOD_80XLegacy.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
+    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+        modifier.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
     process.ak15Table.variables.pt.precision = 10
 
     # add nominal taggers
@@ -191,7 +195,8 @@ def setupAK15(process, runOnMC=False, path=None):
 
     _ak15Task_80X = process.ak15Task.copy()
     _ak15Task_80X.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)
-    run2_miniAOD_80XLegacy.toReplaceWith(process.ak15Task, _ak15Task_80X)
+    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+        modifier.toReplaceWith(process.ak15Task, _ak15Task_80X)
 
     if path is None:
         process.schedule.associate(process.ak15Task)
