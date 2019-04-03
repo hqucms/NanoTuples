@@ -39,7 +39,7 @@ def setupAK15(process, runOnMC=False, path=None):
         process,
         jetSource=cms.InputTag('packedPatJetsAK15PFPuppiSoftDrop'),
         rParam=1.5,
-        jetCorrections=('AK8PFPuppi', cms.vstring(['L2Relative', 'L3Absolute']), 'None'),
+        jetCorrections=('AK8PFPuppi', cms.vstring(JETCorrLevels), 'None'),
         btagDiscriminators=bTagDiscriminators + pfDeepBoostedJetTagsProbs + pfMassDecorrelatedDeepBoostedJetTagsProbs,
         postfix='AK15WithPuppiDaughters',
     )
