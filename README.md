@@ -15,8 +15,10 @@ cmsenv
 git cms-merge-topic -u cms-nanoAOD:master-102X
 
 # until next release
-git cms-merge-topic 26794 # DeepBoostedJet V2
+git cms-merge-topic 26370 # DeepBoostedJet V2
 git cms-merge-topic 26794 # HTXS stage 1.1
+git cms-merge-topic 26657
+git cms-merge-topic 26661
 git clone https://github.com/cms-nanoAOD/PhysicsTools-NanoAOD.git $CMSSW_BASE/external/$SCRAM_ARCH/data/PhysicsTools/NanoAOD/data
 git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools $CMSSW_BASE/external/$SCRAM_ARCH/data/EgammaAnalysis/ElectronTools/data
 git clone https://github.com/cms-data/RecoBTag-Combined.git $CMSSW_BASE/external/$SCRAM_ARCH/data/RecoBTag/Combined/data
