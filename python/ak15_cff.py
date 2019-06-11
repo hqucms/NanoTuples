@@ -52,9 +52,10 @@ def setupAK15(process, runOnMC=False, path=None):
     process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet-symbol.json'
     process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet.params'
 
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = params
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/resnet-symbol.json'
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/resnet.params'
+    from PhysicsTools.NanoTuples.pfMassDecorrelatedDeepBoostedJetPreprocessParamsAK15_cfi import pfMassDecorrelatedDeepBoostedJetPreprocessParams as paramsMD
+    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = paramsMD
+    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/pnet-symbol.json'
+    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/pnet-0000.params'
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsAK15WithPuppiDaughters')

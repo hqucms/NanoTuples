@@ -8,6 +8,19 @@ cd CMSSW_10_2_15/src
 cmsenv
 ```
 
+### Set up MXNet 1.5.0
+
+```bash
+scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/dev-pnet-ak15/mxnet-predict/CMSSW_10_2_15/pkgs/slc7_amd64_gcc700/external/mxnet-predict-toolfile/1.5.0.rc0.mod-cms2/etc/scram.d/mxnet-predict.xml
+
+git cms-addpkg PhysicsTools/MXNet
+git cms-addpkg RecoBTag/MXNet
+
+git cms-addpkg RecoBTag/FeatureTools
+git cherry-pick 525c14c5181fcfc96863f9609915b40be5a64baa
+```
+
+
 ### Apply changes on PhysicsTools/NanoAOD
 
 ```bash
@@ -24,7 +37,7 @@ cmsenv
 ### Get customized NanoAOD producers
 
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b 102X
+git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b dev/102X/PNet
 ```
 
 ### Compile
