@@ -11,13 +11,17 @@ cmsenv
 ### Set up MXNet 1.5.0
 
 ```bash
-scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/dev-pnet-ak15/mxnet-predict/CMSSW_10_2_15/pkgs/slc7_amd64_gcc700/external/mxnet-predict-toolfile/1.5.0.rc0.mod-cms2/etc/scram.d/mxnet-predict.xml
+scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/dev-pnet-ak15/mxnet-predict/CMSSW_10_2_15/pkgs/slc7_amd64_gcc700/external/mxnet-predict-toolfile/1.5.0.rc0.mod/etc/scram.d/mxnet-predict.xml
 
 git cms-addpkg PhysicsTools/MXNet
 git cms-addpkg RecoBTag/MXNet
 
 git cms-addpkg RecoBTag/FeatureTools
 git cherry-pick 525c14c5181fcfc96863f9609915b40be5a64baa
+
+# fix Puppi
+git cms-addpkg CommonTools/PileupAlgos
+# change pReco.id = 0; -> pReco.id = 2; in two lines
 ```
 
 
