@@ -19,7 +19,7 @@ def nanoTuples_customizeVectexTable(process):
     return process
 
 
-def nanoTuples_customizeFatJetTable(process):
+def nanoTuples_customizeFatJetTable(process, runOnMC):
     # add DeepAK8 raw scores: nominal
     from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs
     for prob in _pfDeepBoostedJetTagsProbs:
@@ -32,13 +32,22 @@ def nanoTuples_customizeFatJetTable(process):
         name = prob.split(':')[1]
         setattr(process.fatJetTable.variables, 'deepTagMD_' + name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
+    if runOnMC:
+        process.fatJetTable.variables.partonFlavour = Var("partonFlavour()", int, doc="flavour from parton matching")
+        process.fatJetTable.variables.nBHadrons = Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons")
+        process.fatJetTable.variables.nCHadrons = Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons")
+
+        process.subJetTable.variables.partonFlavour = Var("partonFlavour()", int, doc="flavour from parton matching")
+        process.subJetTable.variables.nBHadrons = Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons")
+        process.subJetTable.variables.nCHadrons = Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons")
+
     return process
 
 
 def nanoTuples_customizeCommon(process, runOnMC):
     setupAK15(process, runOnMC=runOnMC)
     nanoTuples_customizeVectexTable(process)
-    nanoTuples_customizeFatJetTable(process)
+    nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)
 
     return process
 

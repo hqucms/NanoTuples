@@ -32,33 +32,27 @@ def setupAK15(process, runOnMC=False, path=None):
         process.ak15GenJetsNoNuSoftDrop.jetPtMin = 100
 
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
-    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs as pfDeepBoostedJetTagsProbs
-    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfMassDecorrelatedDeepBoostedJetTagsProbs as pfMassDecorrelatedDeepBoostedJetTagsProbs
+    from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs as pfParticleNetJetTagsProbs
 
     updateJetCollection(
         process,
         jetSource=cms.InputTag('packedPatJetsAK15PFPuppiSoftDrop'),
         rParam=1.5,
         jetCorrections=('AK8PFPuppi', cms.vstring(JETCorrLevels), 'None'),
-        btagDiscriminators=bTagDiscriminators + pfDeepBoostedJetTagsProbs + pfMassDecorrelatedDeepBoostedJetTagsProbs,
-        postfix='AK15WithPuppiDaughters',
+        btagDiscriminators=bTagDiscriminators + pfParticleNetJetTagsProbs,
+        postfix='AK15ParticleNet',
     )
 
     # configure DeepAK15
-    from PhysicsTools.NanoTuples.pfDeepBoostedJetPreprocessParamsAK15_cfi import pfDeepBoostedJetPreprocessParams as params
-    process.pfDeepBoostedJetTagInfosAK15WithPuppiDaughters.jet_radius = 1.5
+    from PhysicsTools.NanoTuples.pfParticleNetPreprocessParamsAK15_cfi import pfParticleNetPreprocessParamsAK15 as params
+    process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
 
-    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = params
-    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet-symbol.json'
-    process.pfDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/full/resnet.params'
-
-    from PhysicsTools.NanoTuples.pfMassDecorrelatedDeepBoostedJetPreprocessParamsAK15_cfi import pfMassDecorrelatedDeepBoostedJetPreprocessParams as paramsMD
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.preprocessParams = paramsMD
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/pnet-symbol.json'
-    process.pfMassDecorrelatedDeepBoostedJetTagsAK15WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak15/decorrelated/pnet-0000.params'
+    process.pfParticleNetJetTagsAK15ParticleNet.preprocessParams = params
+    process.pfParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-symbol.json'
+    process.pfParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-0000.params'
 
     # src
-    srcJets = cms.InputTag('selectedUpdatedPatJetsAK15WithPuppiDaughters')
+    srcJets = cms.InputTag('selectedUpdatedPatJetsAK15ParticleNet')
 
     # jetID
     process.looseJetIdAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
@@ -131,13 +125,8 @@ def setupAK15(process, runOnMC=False, path=None):
     process.ak15Table.variables.pt.precision = 10
 
     # add nominal taggers
-    for prob in pfDeepBoostedJetTagsProbs:
+    for prob in pfParticleNetJetTagsProbs:
         name = 'nn_' + prob.split(':')[1]
-        setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
-
-    # add Mass Decorrelated taggers
-    for prob in pfMassDecorrelatedDeepBoostedJetTagsProbs:
-        name = prob.split(':')[1]
         setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     process.ak15SubJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
