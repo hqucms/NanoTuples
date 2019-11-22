@@ -51,7 +51,7 @@ def parseDatasetName(dataset):
                 break
         rlt = re.search(r'_(v[0-9]+)(_ext[0-9]+|)(-v[0-9]+)', ver).groups()
         ext = rlt[1].replace('_', '-') + rlt[2]
-        vername = '_'.join(ver_pieces[:keep_idx]) + '_' + rlt[0] + rlt[2] + ext
+        vername = '_'.join(ver_pieces[:keep_idx]) + '_' + rlt[0] + ext
         # hack
         if 'backup' in ver:
             ext += '_backup'
@@ -201,7 +201,12 @@ def status(args):
     for dirname in jobnames:
         logger.info('Checking status of job %s' % dirname)
         ret = runCrabCommand('status', dir='%s/%s' % (args.work_area, dirname))
-        states = _analyze_crab_status(ret)
+        try:
+            states = _analyze_crab_status(ret)
+        except:
+            logging.warning('Cannot get status for job %s' % dirname)
+            job_status[dirname] = 'UNKNOWN'
+            continue
         try:
             percent_finished = 100.*states['finished'] / sum(states.values())
         except KeyError:
