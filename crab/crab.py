@@ -63,6 +63,42 @@ def parseDatasetName(dataset):
     return procname, vername, ext, isMC
 
 
+def getDatasetSiteInfo(dataset, retry=3):
+    """Return dataset storage sites for given DAS query via dasgoclient"""
+    import subprocess
+    import time
+    import json
+    query = 'site dataset=%s' % dataset
+    cmd = ['dasgoclient', '-query', query, '-json']
+    retry_count = 0
+    while True:
+        logger.info('Querying DAS:\n  %s' % ' '.join(cmd) + '' if retry_count == 0 else '\n... retry %d ...' % retry_count)
+        if retry_count > 0:
+            time.sleep(3)
+        retry_count += 1
+        if retry_count > retry:
+            raise RuntimeError('Failed to retrieve site info from DAS for: %s' % dataset)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        outs, errs = proc.communicate()
+        if errs:
+            logger.error('DAS error: %s' % errs)
+            continue
+        else:
+            on_fnal_disk = False
+            sites = []
+            for row in json.loads(outs):
+                for rec in row.get('site', []):
+                    if rec.get('kind', '') == 'Disk' and '100' in rec.get('dataset_fraction', ''):
+                        site_name = rec.get('name', '')
+                        if site_name:
+                            if site_name.startswith('T1_US_FNAL'):
+                                on_fnal_disk = True
+                            elif not site_name.startswith('T1_'):
+                                sites.append(rec.get('name', ''))
+            logger.info('Found %d sites for %s:\n  %s%s' % (len(sites), dataset, ','.join(sites), ',T1_US_FNAL' if on_fnal_disk else ''))
+            return on_fnal_disk, sites
+
+
 def createConfig(args, dataset):
     from CRABClient.UserUtilities import config
     config = config()
@@ -108,6 +144,12 @@ def createConfig(args, dataset):
         config.Data.ignoreLocality = True
         config.Site.whitelist = ['T3_US_FNALLPC']
         config.Site.ignoreGlobalBlacklist = True
+
+    on_fnal_disk, t2_sites = getDatasetSiteInfo(dataset)
+    if on_fnal_disk and len(t2_sites) < 3:
+        config.General.requestName = config.General.requestName + '-remote'
+        config.Data.ignoreLocality = True
+        config.Site.whitelist = ['T2_US_*']
 
     # write config file
     cfgdir = os.path.join(args.work_area, 'configs')
@@ -204,8 +246,8 @@ def status(args):
         try:
             states = _analyze_crab_status(ret)
         except:
-            logging.warning('Cannot get status for job %s' % dirname)
-            job_status[dirname] = 'UNKNOWN'
+            logger.warning('Cannot get status for job %s' % dirname)
+            job_status[dirname] = '\033[1;101mUNKNOWN\033[0m'
             continue
         try:
             percent_finished = 100.*states['finished'] / sum(states.values())
