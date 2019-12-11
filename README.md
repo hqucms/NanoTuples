@@ -3,8 +3,8 @@
 ### Set up CMSSW
 
 ```bash
-cmsrel CMSSW_10_2_15
-cd CMSSW_10_2_15/src
+cmsrel CMSSW_11_0_0_pre11
+cd CMSSW_11_0_0_pre11/src
 cmsenv
 ```
 
@@ -21,10 +21,35 @@ cmsenv
 # git cms-merge-topic -u hqucms:custom-nano-94X-add-trigger-prescales
 ```
 
+### Merge dev branch for ParticleNet
+
+```bash
+# setup ONNXRuntime and set MLAS_DYNAMIC_CPU_ARCH=99
+sed -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH" value="99"/g' /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_11_0_0_pre13/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml > $CMSSW_BASE/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml
+scram setup $CMSSW_BASE/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml
+
+# setup OpenBLAS w/ DYNAMIC_ARCH=1
+scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS-toolfile/1.0-cms/etc/scram.d/OpenBLAS.xml
+cp -a --remove-destination /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS/0.3.5-cms/lib/libopenblas* $CMSSW_BASE/external/slc7_amd64_gcc820/lib
+
+# get data files
+mkdir $CMSSW_BASE/external/slc7_amd64_gcc820/data
+cp -r /afs/cern.ch/user/h/hqu/public/ParticleNet-V00/RecoBTag $CMSSW_BASE/external/slc7_amd64_gcc820/data/
+
+# merge dev branch
+git cms-merge-topic -u hqucms:dev/particle-net-decorr-11X
+
+# or if you do not need DeepTau
+# git cms-merge-topic -u hqucms:dev/particle-net-decorr-11X-disable-deepTau
+
+# fix NanoAOD weight name
+sed -i -e 's/std::string label = std::string("_") + x.first;/std::string label = x.first.empty() ? "" : std::string("_") + x.first;/g' $CMSSW_BASE/src/PhysicsTools/NanoAOD/plugins/GenWeightsTableProducer.cc
+```
+
 ### Get customized NanoAOD producers
 
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b dev/102X/PNet
+git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b dev/11X/PNet
 ```
 
 ### Compile

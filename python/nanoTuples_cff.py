@@ -41,11 +41,13 @@ def nanoTuples_customizeFatJetTable(process, runOnMC):
         process.subJetTable.variables.nBHadrons = Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons")
         process.subJetTable.variables.nCHadrons = Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons")
 
+        process.finalGenParticles.select.append('keep+ (abs(pdgId) == 6 || abs(pdgId) == 23 || abs(pdgId) == 24 || abs(pdgId) == 25)')
+
     return process
 
 
 def nanoTuples_customizeCommon(process, runOnMC):
-    setupAK15(process, runOnMC=runOnMC)
+    setupAK15(process, runOnMC=runOnMC, runParticleNet=False, runParticleNetMD=True)
     nanoTuples_customizeVectexTable(process)
     nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)
 

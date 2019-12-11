@@ -6,7 +6,7 @@ from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94
 # ---------------------------------------------------------
 
 
-def setupAK15(process, runOnMC=False, path=None):
+def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runParticleNetMD=True):
     # recluster Puppi jets
     bTagDiscriminators = [
         'pfJetProbabilityBJetTags',
@@ -33,23 +33,36 @@ def setupAK15(process, runOnMC=False, path=None):
 
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs as pfParticleNetJetTagsProbs
+    from RecoBTag.MXNet.pfParticleNet_cff import _pfMassDecorrelatedParticleNetJetTagsProbs as pfMassDecorrelatedParticleNetJetTagsProbs
+
+    if runParticleNet:
+        bTagDiscriminators += pfParticleNetJetTagsProbs
+    if runParticleNetMD:
+        bTagDiscriminators += pfMassDecorrelatedParticleNetJetTagsProbs
 
     updateJetCollection(
         process,
         jetSource=cms.InputTag('packedPatJetsAK15PFPuppiSoftDrop'),
         rParam=1.5,
         jetCorrections=('AK8PFPuppi', cms.vstring(JETCorrLevels), 'None'),
-        btagDiscriminators=bTagDiscriminators + pfParticleNetJetTagsProbs,
+        btagDiscriminators=bTagDiscriminators,
         postfix='AK15ParticleNet',
     )
 
     # configure DeepAK15
-    from PhysicsTools.NanoTuples.pfParticleNetPreprocessParamsAK15_cfi import pfParticleNetPreprocessParamsAK15 as params
-    process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
+    if runParticleNet:
+        process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
+        from PhysicsTools.NanoTuples.pfParticleNetPreprocessParamsAK15_cfi import pfParticleNetPreprocessParamsAK15
+        process.pfParticleNetJetTagsAK15ParticleNet.preprocessParams = pfParticleNetPreprocessParamsAK15
+        process.pfParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-symbol.json'
+        process.pfParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-0000.params'
 
-    process.pfParticleNetJetTagsAK15ParticleNet.preprocessParams = params
-    process.pfParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-symbol.json'
-    process.pfParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-0000.params'
+    if runParticleNetMD:
+        process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
+        from PhysicsTools.NanoTuples.pfMassDecorrelatedParticleNetPreprocessParamsAK15_cfi import pfMassDecorrelatedParticleNetPreprocessParamsAK15
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.preprocessParams = pfMassDecorrelatedParticleNetPreprocessParamsAK15
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNet-symbol.json'
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNet-0000.params'
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsAK15ParticleNet')
@@ -125,9 +138,16 @@ def setupAK15(process, runOnMC=False, path=None):
     process.ak15Table.variables.pt.precision = 10
 
     # add nominal taggers
-    for prob in pfParticleNetJetTagsProbs:
-        name = 'nn_' + prob.split(':')[1]
-        setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+    if runParticleNet:
+        for prob in pfParticleNetJetTagsProbs:
+            name = 'ParticleNet_' + prob.split(':')[1]
+            setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+
+    # add mass-decorelated taggers
+    if runParticleNetMD:
+        for prob in pfMassDecorrelatedParticleNetJetTagsProbs:
+            name = 'ParticleNetMD_' + prob.split(':')[1]
+            setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     process.ak15SubJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         src=cms.InputTag("selectedPatJetsAK15PFPuppiSoftDropPacked", "SubJets"),
