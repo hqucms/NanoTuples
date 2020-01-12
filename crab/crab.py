@@ -19,10 +19,14 @@ def configLogger(name, loglevel=logging.INFO):
     console.setLevel(loglevel)
     console.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
     logger.addHandler(console)
+    logfile = logging.FileHandler('autocrab.log')
+    logfile.setLevel(loglevel)
+    logfile.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
+    logger.addHandler(logfile)
 
 
-logger = logging.getLogger(__name__)
-configLogger(__name__)
+logger = logging.getLogger('autocrab')
+configLogger('autocrab')
 
 
 def natural_sort(l):
@@ -94,7 +98,7 @@ def getDatasetSiteInfo(dataset, retry=3):
                             if site_name.startswith('T1_US_FNAL'):
                                 on_fnal_disk = True
                             elif not site_name.startswith('T1_'):
-                                sites.append(rec.get('name', ''))
+                                sites.append(str(rec.get('name', '')))
             logger.info('Found %d sites for %s:\n  %s%s' % (len(sites), dataset, ','.join(sites), ',T1_US_FNAL' if on_fnal_disk else ''))
             return on_fnal_disk, sites
 
@@ -149,7 +153,7 @@ def createConfig(args, dataset):
     if on_fnal_disk and len(t2_sites) < 3:
         config.General.requestName = config.General.requestName + '-remote'
         config.Data.ignoreLocality = True
-        config.Site.whitelist = ['T2_US_*']
+        config.Site.whitelist = ['T2_US_*'] + t2_sites
 
     # write config file
     cfgdir = os.path.join(args.work_area, 'configs')
@@ -196,17 +200,19 @@ def parseOptions(args):
 
 def killjobs(args):
     import os
-    for dirname in os.listdir(args.work_area):
-        logger.info('Kill job %s' % dirname)
-        runCrabCommand('kill', dir='%s/%s' % (args.work_area, dirname))
+    for work_area in args.work_area:
+        for dirname in os.listdir(work_area):
+            logger.info('Kill job %s/%s' % (work_area, dirname))
+            runCrabCommand('kill', dir='%s/%s' % (work_area, dirname))
 
 
 def resubmit(args):
     import os
     kwargs = parseOptions(args)
-    for dirname in os.listdir(args.work_area):
-        logger.info('Resubmitting job %s with options %s' % (dirname, str(kwargs)))
-        runCrabCommand('resubmit', dir='%s/%s' % (args.work_area, dirname), **kwargs)
+    for work_area in args.work_area:
+        for dirname in os.listdir(work_area):
+            logger.info('Resubmitting job %s/%s with options %s' % (work_area, dirname, str(kwargs)))
+            runCrabCommand('resubmit', dir='%s/%s' % (work_area, dirname), **kwargs)
 
 
 def _analyze_crab_status(ret):
@@ -236,56 +242,73 @@ def _analyze_crab_status(ret):
 def status(args):
     import os
     kwargs = parseOptions(args)
-    jobnames = [d for d in os.listdir(args.work_area) if d.startswith('crab_')]
-    finished = 0
-    job_status = {}
-    submit_failed = []
-    for dirname in jobnames:
-        logger.info('Checking status of job %s' % dirname)
-        ret = runCrabCommand('status', dir='%s/%s' % (args.work_area, dirname))
-        try:
-            states = _analyze_crab_status(ret)
-        except:
-            logger.warning('Cannot get status for job %s' % dirname)
-            job_status[dirname] = '\033[1;101mUNKNOWN\033[0m'
-            continue
-        try:
-            percent_finished = 100.*states['finished'] / sum(states.values())
-        except KeyError:
-            percent_finished = 0
-        pcts_str = ' (\033[1;%dm%.1f%%\033[0m)' % (32 if percent_finished > 90 else 34 if percent_finished > 70 else 35 if percent_finished > 50 else 31, percent_finished)
-        job_status[dirname] = ret['status'] + pcts_str + '\n    ' + str(states)
-        if ret['publicationEnabled']:
-            pcts_published = 100.*ret['publication'].get('done', 0) / max(sum(states.values()), 1)
-            pub_pcts_str = '\033[1;%dm%.1f%%\033[0m' % (32 if pcts_published > 90 else 34 if pcts_published > 70 else 35 if pcts_published > 50 else 31, pcts_published)
-            job_status[dirname] = job_status[dirname] + '\n    publication: ' + pub_pcts_str + ' ' + str(ret['publication'])
+    for work_area in args.work_area:
+        jobnames = [d for d in os.listdir(work_area) if d.startswith('crab_')]
+        finished = 0
+        job_status = {}
+        submit_failed = []
+        for dirname in jobnames:
+            logger.info('Checking status of job %s' % dirname)
+            ret = runCrabCommand('status', dir='%s/%s' % (work_area, dirname))
+            try:
+                states = _analyze_crab_status(ret)
+            except:
+                logger.warning('Cannot get status for job %s' % dirname)
+                job_status[dirname] = '\033[1;101mUNKNOWN\033[0m'
+                continue
+            try:
+                percent_finished = 100.*states['finished'] / sum(states.values())
+            except KeyError:
+                percent_finished = 0
+            pcts_str = ' (\033[1;%dm%.1f%%\033[0m)' % (32 if percent_finished > 90 else 34 if percent_finished > 70 else 35 if percent_finished > 50 else 31, percent_finished)
+            job_status[dirname] = ret['status'] + pcts_str + '\n    ' + str(states)
+            if ret['publicationEnabled']:
+                pcts_published = 100.*ret['publication'].get('done', 0) / max(sum(states.values()), 1)
+                pub_pcts_str = '\033[1;%dm%.1f%%\033[0m' % (32 if pcts_published > 90 else 34 if pcts_published > 70 else 35 if pcts_published > 50 else 31, pcts_published)
+                job_status[dirname] = job_status[dirname] + '\n    publication: ' + pub_pcts_str + ' ' + str(ret['publication'])
 
-        if ret['status'] == 'COMPLETED':
-            finished += 1
-        elif ret['dbStatus'] == 'SUBMITFAILED':
-            if not args.no_resubmit:
-                logger.info('Resubmitting submit-failed job %s.' % dirname)
-                shutil.rmtree('%s/%s' % (args.work_area, dirname))
-                cfgpath = os.path.join(args.work_area, 'configs', dirname.lstrip('crab_') + '.py')
-                cmd = 'crab submit -c {cfgpath}'.format(cfgpath=cfgpath)
-                p = subprocess.Popen(cmd, shell=True)
-                p.communicate()
-                if p.returncode != 0:
-                    submit_failed.append(ret['inputDataset'])
+            if ret['status'] == 'COMPLETED':
+                finished += 1
+            elif ret['dbStatus'] == 'SUBMITFAILED':
+                if not args.no_resubmit:
+                    logger.info('Resubmitting submit-failed job %s.' % dirname)
+                    shutil.rmtree('%s/%s' % (work_area, dirname))
+                    cfgpath = os.path.join(work_area, 'configs', dirname.lstrip('crab_') + '.py')
+                    cmd = 'crab submit -c {cfgpath}'.format(cfgpath=cfgpath)
+                    p = subprocess.Popen(cmd, shell=True)
+                    p.communicate()
+                    if p.returncode != 0:
+                        submit_failed.append(ret['inputDataset'])
 
-        elif states.get('failed', 0) > 0 and 'killed' not in ret['status'].lower() and not args.no_resubmit:
-            logger.info('Resubmitting job %s with options %s' % (dirname, str(kwargs)))
-            runCrabCommand('resubmit', dir='%s/%s' % (args.work_area, dirname), **kwargs)
+            elif states.get('failed', 0) > 0 and 'killed' not in ret['status'].lower() and not args.no_resubmit:
+                logger.info('Resubmitting job %s with options %s' % (dirname, str(kwargs)))
+                runCrabCommand('resubmit', dir='%s/%s' % (work_area, dirname), **kwargs)
 
-        if ret['publication'].get('failed', 0) > 0:
-            logger.info('Resubmitting job %s for failed publication' % dirname)
-            runCrabCommand('resubmit', dir='%s/%s' % (args.work_area, dirname), publication=True)
+            if ret['publication'].get('failed', 0) > 0:
+                logger.info('Resubmitting job %s for failed publication' % dirname)
+                runCrabCommand('resubmit', dir='%s/%s' % (work_area, dirname), publication=True)
 
-    logger.info('====== Summary ======\n' +
-                 '\n'.join(['%s: %s' % (k, job_status[k]) for k in natural_sort(job_status.keys())]))
-    logger.info('%d/%d jobs completed!' % (finished, len(jobnames)))
-    if len(submit_failed):
-        logger.warning('Submit failed:\n%s' % '\n'.join(submit_failed))
+        logger.info('====== Summary (%s) ======\n' % (work_area) +
+                     '\n'.join(['%s: %s' % (k, job_status[k]) for k in natural_sort(job_status.keys())]))
+        logger.info('%d/%d jobs completed!' % (finished, len(jobnames)))
+        if len(submit_failed):
+            logger.warning('Submit failed:\n%s' % '\n'.join(submit_failed))
+
+
+def summary_from_log_file():
+    import ast
+    summary = {}
+    with open('autocrab.log') as f:
+        for l in f:
+            l = l.strip()
+            if l[:2] == "{'":
+                s = ast.literal_eval(l)
+                for k in s:
+                    if k not in summary:
+                        summary[k] = s[k]
+                    else:
+                        summary[k] += s[k]
+    print(summary)
 
 
 def main():
@@ -336,7 +359,7 @@ def main():
                         action='store_true', default=False,
                         help='Set the inputDataset parameter to the python config file. Default: %(default)s'
                         )
-    parser.add_argument('--work-area',
+    parser.add_argument('--work-area', nargs='*',
                         default='crab_projects',
                         help='Crab project area. Default: %(default)s'
                         )
@@ -376,7 +399,15 @@ def main():
                         default='',
                         help='CRAB command options, space separated string. Default: %(default)s'
                         )
+    parser.add_argument('--summary',
+                        action='store_true', default=False,
+                        help='Print job status summary from the log file. Default: %(default)s'
+                        )
     args = parser.parse_args()
+
+    if args.summary:
+        summary_from_log_file()
+        return
 
     if args.status:
         status(args)
@@ -389,6 +420,9 @@ def main():
     if args.kill:
         killjobs(args)
         return
+
+    assert(len(args.work_area) == 1)
+    args.work_area = args.work_area[0]
 
     submit_failed = []
     request_names = {}
