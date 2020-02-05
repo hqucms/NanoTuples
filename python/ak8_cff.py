@@ -34,27 +34,16 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
 
     # DeepAK8
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
-    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsAll
+    from RecoBTag.ONNXRuntime.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs,_pfMassDecorrelatedDeepBoostedJetTagsProbs
+    from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs, _pfMassDecorrelatedParticleNetJetTagsProbs
     updateJetCollection(
         process,
         jetSource=cms.InputTag('packedPatJetsAK8PFPuppiSoftDrop'),
         rParam=0.8,
         jetCorrections=('AK8PFPuppi', cms.vstring(JETCorrLevels), 'None'),
-        btagDiscriminators=bTagDiscriminators + _pfDeepBoostedJetTagsAll,
+        btagDiscriminators=bTagDiscriminators + _pfDeepBoostedJetTagsProbs + _pfMassDecorrelatedDeepBoostedJetTagsProbs + _pfParticleNetJetTagsProbs + _pfMassDecorrelatedParticleNetJetTagsProbs,
         postfix='AK8WithPuppiDaughters',
     )
-
-    # configure DeepAK8
-#     from PhysicsTools.NanoTuples.pfDeepBoostedJetPreprocessParamsAK8_cfi import pfDeepBoostedJetPreprocessParams as params_ak8_full
-#     from PhysicsTools.NanoTuples.pfMassDecorrelatedDeepBoostedJetPreprocessParamsAK8_cfi import pfDeepBoostedJetPreprocessParams as params_ak8_decorr
-#
-#     process.pfDeepBoostedJetTagsAK8WithPuppiDaughters.preprocessParams = params_ak8_full
-#     process.pfDeepBoostedJetTagsAK8WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak8/V02/full/resnet-symbol.json'
-#     process.pfDeepBoostedJetTagsAK8WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak8/V02/full/resnet-0000.params'
-#
-#     process.pfMassDecorrelatedDeepBoostedJetTagsAK8WithPuppiDaughters.preprocessParams = params_ak8_decorr
-#     process.pfMassDecorrelatedDeepBoostedJetTagsAK8WithPuppiDaughters.model_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak8/V02/decorrelated/resnet-symbol.json'
-#     process.pfMassDecorrelatedDeepBoostedJetTagsAK8WithPuppiDaughters.param_path = 'PhysicsTools/NanoTuples/data/DeepBoostedJet/ak8/V02/decorrelated/resnet-0108.params'
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsAK8WithPuppiDaughters')
@@ -132,15 +121,23 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
     process.customAK8Table.variables.pt.precision = 10
 
     # add DeepAK8 scores: nominal
-    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs
     for prob in _pfDeepBoostedJetTagsProbs:
-        name = prob.split(':')[1].replace('prob', 'nn')
+        name = 'DeepAK8_' + prob.split(':')[1]
         setattr(process.customAK8Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     # add DeepAK8 scores: mass decorrelated
-    from RecoBTag.MXNet.pfDeepBoostedJet_cff import _pfMassDecorrelatedDeepBoostedJetTagsProbs
     for prob in _pfMassDecorrelatedDeepBoostedJetTagsProbs:
-        name = prob.split(':')[1].replace('prob', 'nnMD')
+        name = 'DeepAK8MD_' + prob.split(':')[1]
+        setattr(process.customAK8Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+
+    # add ParticleNet nominal taggers
+    for prob in _pfParticleNetJetTagsProbs:
+        name = 'ParticleNet_' + prob.split(':')[1]
+        setattr(process.customAK8Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+
+    # add ParticleNet mass-decorelated taggers
+    for prob in _pfMassDecorrelatedParticleNetJetTagsProbs:
+        name = 'ParticleNetMD_' + prob.split(':')[1]
         setattr(process.customAK8Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     process.customAK8SubJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
