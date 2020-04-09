@@ -12,20 +12,22 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     bTagDiscriminators = [
         'pfJetProbabilityBJetTags',
         'pfCombinedInclusiveSecondaryVertexV2BJetTags',
-        'pfDeepCSVJetTags',
+        'pfDeepCSVJetTags:probb',
+        'pfDeepCSVJetTags:probbb',
     ]
     subjetBTagDiscriminators = [
         'pfJetProbabilityBJetTags',
         'pfCombinedInclusiveSecondaryVertexV2BJetTags',
-        'pfDeepCSVJetTags',
+        'pfDeepCSVJetTags:probb',
+        'pfDeepCSVJetTags:probbb',
     ]
     JETCorrLevels = ['L2Relative', 'L3Absolute', 'L2L3Residual']
 
     from PhysicsTools.NanoTuples.jetToolbox_cff import jetToolbox
-    jetToolbox(process, 'ak15', 'dummySeqAK15', 'out', associateTask=False,
+    jetToolbox(process, 'ak15', 'dummySeqAK15', 'noOutput',
                PUMethod='Puppi', JETCorrPayload='AK8PFPuppi', JETCorrLevels=JETCorrLevels,
                Cut='pt > 160.0 && abs(rapidity()) < 2.4',
-               miniAOD=True, runOnMC=runOnMC,
+               runOnMC=runOnMC,
                addNsub=True, maxTau=3,
                addSoftDrop=True, addSoftDropSubjets=True, subJETCorrPayload='AK4PFPuppi', subJETCorrLevels=JETCorrLevels,
                bTagDiscriminators=bTagDiscriminators, subjetBTagDiscriminators=subjetBTagDiscriminators)
@@ -249,5 +251,3 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
         process.schedule.associate(process.ak15Task)
     else:
         getattr(process, path).associate(process.ak15Task)
-
-# ---------------------------------------------------------

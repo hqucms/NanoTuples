@@ -1,7 +1,8 @@
 import FWCore.ParameterSet.Config as cms
+from Configuration.Eras.Modifier_run2_jme_2016_cff import run2_jme_2016
+from Configuration.Eras.Modifier_run2_jme_2017_cff import run2_jme_2017
+
 from PhysicsTools.NanoAOD.common_cff import *
-from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
-from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
 
 # ---------------------------------------------------------
 
@@ -20,10 +21,10 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
     JETCorrLevels = ['L2Relative', 'L3Absolute', 'L2L3Residual']
 
     from PhysicsTools.NanoTuples.jetToolbox_cff import jetToolbox
-    jetToolbox(process, 'ak8', 'dummySeqAK8', 'out', associateTask=False,
+    jetToolbox(process, 'ak8', 'dummySeqAK8', 'noOutput',
                PUMethod='Puppi', JETCorrPayload='AK8PFPuppi', JETCorrLevels=JETCorrLevels,
                Cut='pt > 170.0 && abs(rapidity()) < 2.4',
-               miniAOD=True, runOnMC=runOnMC,
+               runOnMC=runOnMC,
                addNsub=True, maxTau=3,
                addSoftDrop=True, addSoftDropSubjets=True, subJETCorrPayload='AK4PFPuppi', subJETCorrLevels=JETCorrLevels,
                bTagDiscriminators=bTagDiscriminators, subjetBTagDiscriminators=subjetBTagDiscriminators)
@@ -32,7 +33,6 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
         process.ak8GenJetsNoNu.jetPtMin = 100
         process.ak8GenJetsNoNuSoftDrop.jetPtMin = 100
 
-    # DeepAK8
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     from RecoBTag.ONNXRuntime.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsProbs,_pfMassDecorrelatedDeepBoostedJetTagsProbs
     from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs, _pfMassDecorrelatedParticleNetJetTagsProbs
@@ -59,22 +59,24 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
 
     process.tightJetIdCustomAK8 = cms.EDProducer("PatJetIDValueMapProducer",
               filterParams=cms.PSet(
-                version=cms.string('WINTER17'),
+                version=cms.string('SUMMER18PUPPI'),
                 quality = cms.string('TIGHT'),
               ),
               src=srcJets
     )
 
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.tightJetIdCustomAK8.filterParams, version="WINTER16")
-
     process.tightJetIdLepVetoCustomAK8 = cms.EDProducer("PatJetIDValueMapProducer",
               filterParams=cms.PSet(
-                version = cms.string('WINTER17'),
+                version = cms.string('SUMMER18PUPPI'),
                 quality = cms.string('TIGHTLEPVETO'),
               ),
               src=srcJets
     )
+
+    run2_jme_2016.toModify(process.tightJetIdCustomAK8.filterParams, version="WINTER16")
+    run2_jme_2016.toModify(process.tightJetIdLepVetoCustomAK8.filterParams, version="WINTER16")
+    run2_jme_2017.toModify(process.tightJetIdCustomAK8.filterParams, version="WINTER17PUPPI")
+    run2_jme_2017.toModify(process.tightJetIdLepVetoCustomAK8.filterParams, version="WINTER17PUPPI")
 
     process.customAK8WithUserData = cms.EDProducer("PATJetUserDataEmbedder",
         src=srcJets,
@@ -85,11 +87,10 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
         ),
     )
     
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.customAK8WithUserData.userInts,
-            looseId=cms.InputTag("looseJetIdCustomAK8"),
-            tightIdLepVeto=None,
-        )
+    run2_jme_2016.toModify(process.customAK8WithUserData.userInts,
+        looseId=cms.InputTag("looseJetIdCustomAK8"),
+        tightIdLepVeto=None,
+    )
 
     process.customAK8Table = cms.EDProducer("SimpleCandidateFlatTableProducer",
         src=cms.InputTag("customAK8WithUserData"),
@@ -102,22 +103,22 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
             jetId=Var("userInt('tightId')*2+4*userInt('tightIdLepVeto')", int, doc="Jet ID flags bit1 is loose (always false in 2017 since it does not exist), bit2 is tight, bit3 is tightLepVeto"),
             area=Var("jetArea()", float, doc="jet catchment area, for JECs", precision=10),
             rawFactor=Var("1.-jecFactor('Uncorrected')", float, doc="1 - Factor to get back to raw pT", precision=6),
+            nPFConstituents=Var("numberOfDaughters()", int, doc="Number of PF candidate constituents"),
             tau1=Var("userFloat('NjettinessAK8Puppi:tau1')", float, doc="Nsubjettiness (1 axis)", precision=10),
             tau2=Var("userFloat('NjettinessAK8Puppi:tau2')", float, doc="Nsubjettiness (2 axis)", precision=10),
             tau3=Var("userFloat('NjettinessAK8Puppi:tau3')", float, doc="Nsubjettiness (3 axis)", precision=10),
             msoftdrop=Var("groomedMass()", float, doc="Corrected soft drop mass with PUPPI", precision=10),
             btagCSVV2=Var("bDiscriminator('pfCombinedInclusiveSecondaryVertexV2BJetTags')", float, doc=" pfCombinedInclusiveSecondaryVertexV2 b-tag discriminator (aka CSVV2)", precision=10),
             btagHbb=Var("bDiscriminator('pfBoostedDoubleSecondaryVertexAK8BJetTags')", float, doc="Higgs to BB tagger discriminator", precision=10),
+            nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons"),
+            nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons"),
             subJetIdx1=Var("?nSubjetCollections()>0 && subjets().size()>0?subjets()[0].key():-1", int,
                  doc="index of first subjet"),
             subJetIdx2=Var("?nSubjetCollections()>0 && subjets().size()>1?subjets()[1].key():-1", int,
                  doc="index of second subjet"),
-            nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons"),
-            nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons"),
         )
     )
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.customAK8Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
+    run2_jme_2016.toModify(process.customAK8Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
     process.customAK8Table.variables.pt.precision = 10
 
     # add DeepAK8 scores: nominal
@@ -148,10 +149,10 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
         singleton=cms.bool(False),  # the number of entries is variable
         extension=cms.bool(False),  # this is the main table for the jets
         variables=cms.PSet(P4Vars,
+            area=Var("jetArea()", float, doc="jet catchment area, for JECs", precision=10),
+            rawFactor=Var("1.-jecFactor('Uncorrected')", float, doc="1 - Factor to get back to raw pT", precision=6),
             btagDeepB=Var("bDiscriminator('pfDeepCSVJetTags:probb')+bDiscriminator('pfDeepCSVJetTags:probbb')", float, doc="DeepCSV b+bb tag discriminator", precision=10),
             btagCSVV2=Var("bDiscriminator('pfCombinedInclusiveSecondaryVertexV2BJetTags')", float, doc=" pfCombinedInclusiveSecondaryVertexV2 b-tag discriminator (aka CSVV2)", precision=10),
-            rawFactor=Var("1.-jecFactor('Uncorrected')", float, doc="1 - Factor to get back to raw pT", precision=6),
-            area=Var("jetArea()", float, doc="jet catchment area, for JECs", precision=10),
             nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons"),
             nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons"),
         )
@@ -196,8 +197,7 @@ def setupCustomizedAK8(process, runOnMC=False, path=None):
 
     _customizedAK8Task_80X = process.customizedAK8Task.copy()
     _customizedAK8Task_80X.replace(process.tightJetIdLepVetoCustomAK8, process.looseJetIdCustomAK8)
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toReplaceWith(process.customizedAK8Task, _customizedAK8Task_80X)
+    run2_jme_2016.toReplaceWith(process.customizedAK8Task, _customizedAK8Task_80X)
 
     if path is None:
         process.schedule.associate(process.customizedAK8Task)
