@@ -55,6 +55,7 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     )
 
     # configure DeepAK15
+    from RecoBTag.ONNXRuntime.pfDeepBoostedJetTags_cfi import pfDeepBoostedJetTags as _pfDeepBoostedJetTags
     if runParticleNet:
         process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
         from PhysicsTools.NanoTuples.pfParticleNetPreprocessParamsAK15_cfi import pfParticleNetPreprocessParamsAK15
@@ -65,9 +66,12 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     if runParticleNetMD:
         process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
         from PhysicsTools.NanoTuples.pfMassDecorrelatedParticleNetPreprocessParamsAK15_cfi import pfMassDecorrelatedParticleNetPreprocessParamsAK15
-        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.preprocessParams = pfMassDecorrelatedParticleNetPreprocessParamsAK15
-        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNet-symbol.json'
-        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNet-0000.params'
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet = _pfDeepBoostedJetTags.clone(
+            src = process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.src,
+            flav_names = process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.flav_names,
+            preprocessParams = pfMassDecorrelatedParticleNetPreprocessParamsAK15,
+            model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNetMD.onnx',
+            )
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsAK15ParticleNet')

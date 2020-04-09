@@ -13,14 +13,7 @@ cmsenv
 ```bash
 # set MLAS_DYNAMIC_CPU_ARCH=99 in ONNXRuntime 
 sed -i -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH" value="99"/g' $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml
-scram setup $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml
-
-# setup OpenBLAS w/ DYNAMIC_ARCH=1
-scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS-toolfile/1.0-cms/etc/scram.d/OpenBLAS.xml
-cp -a --remove-destination /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS/0.3.5-cms/lib/libopenblas* $CMSSW_BASE/external/slc7_amd64_gcc820/lib
-
-# TODO: disable DeepTau
-
+scram setup $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml && cmsenv
 ```
 
 ### Get customized NanoAOD producers
