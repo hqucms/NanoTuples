@@ -79,6 +79,14 @@ cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --dat
 less +F test_mc2018.log
 ```
 
+Data (2018ABC, 102X):
+
+```bash
+cmsDriver.py test_nanoTuples_data2018abc -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2018B/JetHT/MINIAOD/17Sep2018-v1/60000/FE3C69F0-A0BC-8941-92AF-B0DA1A6270BF.root --fileout file:nano_data2018b.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2018b.log &
+
+less +F test_data2018b.log
+```
+
 
 ### Production
 
