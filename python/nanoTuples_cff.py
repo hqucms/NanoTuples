@@ -4,17 +4,8 @@ from PhysicsTools.NanoTuples.ak15_cff import setupAK15
 
 
 def nanoTuples_customizeVectexTable(process):
-    process.vertexTable = cms.EDProducer("CustomVertexTableProducer",
-        pvSrc=cms.InputTag("offlineSlimmedPrimaryVertices"),
-        goodPvCut=cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.Rho <= 2"),
-        svSrc=cms.InputTag("slimmedSecondaryVertices"),
-        svCut=cms.string(""),
-        dlenMin=cms.double(0),
-        dlenSigMin=cms.double(0),
-        pvName=cms.string("PV"),
-        svName=cms.string("SV"),
-        svDoc=cms.string("secondary vertices from IVF algorithm"),
-    )
+    process.vertexTable.dlenMin = -1
+    process.vertexTable.dlenSigMin = -1
     process.svCandidateTable.variables.ntracks = Var("numberOfDaughters()", int, doc="number of tracks")
     return process
 
@@ -33,23 +24,33 @@ def nanoTuples_customizeFatJetTable(process, runOnMC):
         setattr(process.fatJetTable.variables, 'deepTagMD_' + name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     if runOnMC:
-        process.fatJetTable.variables.partonFlavour = Var("partonFlavour()", int, doc="flavour from parton matching")
-        process.fatJetTable.variables.nBHadrons = Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons")
-        process.fatJetTable.variables.nCHadrons = Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons")
-
-        process.subJetTable.variables.partonFlavour = Var("partonFlavour()", int, doc="flavour from parton matching")
-        process.subJetTable.variables.nBHadrons = Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons")
-        process.subJetTable.variables.nCHadrons = Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons")
-
         process.finalGenParticles.select.append('keep+ (abs(pdgId) == 6 || abs(pdgId) == 23 || abs(pdgId) == 24 || abs(pdgId) == 25)')
 
     return process
 
 
+def _fix_tau_global_tag(process):
+    global_tag_map = {
+        '102X_mcRun2_asymptotic_v':'110X_mcRun2_asymptotic_v7',
+        '102X_mc2017_realistic_v':'110X_mc2017_realistic_v4',
+        '102X_upgrade2018_realistic_v':'110X_upgrade2018_realistic_v9',
+        '102X_dataRun2_v':'111X_dataRun2_v2',
+        '102X_dataRun2_Prompt_v':'111X_dataRun2_v2',
+        }
+    for k in global_tag_map:
+        if k in process.GlobalTag.globaltag.value():
+            tau_tag = global_tag_map[k]
+            break
+    process.loadRecoTauTagMVAsFromPrepDB.globaltag = tau_tag
+    process.prefer('GlobalTag')
+    return process
+
+
 def nanoTuples_customizeCommon(process, runOnMC):
-    setupAK15(process, runOnMC=runOnMC, runParticleNet=False, runParticleNetMD=True)
+    setupAK15(process, runOnMC=runOnMC)
     nanoTuples_customizeVectexTable(process)
     nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)
+    _fix_tau_global_tag(process)
 
     return process
 

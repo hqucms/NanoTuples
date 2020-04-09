@@ -3,53 +3,30 @@
 ### Set up CMSSW
 
 ```bash
-cmsrel CMSSW_11_0_0_pre11
-cd CMSSW_11_0_0_pre11/src
+cmsrel CMSSW_11_1_0_pre5
+cd CMSSW_11_1_0_pre5/src
 cmsenv
 ```
 
-### Apply changes on PhysicsTools/NanoAOD
+### [DEV] Some configuration changes to increase processing speed
 
 ```bash
-# pull updates from official NanoAOD repo
-# git cms-merge-topic -u cms-nanoAOD:master-102X
-
-# no longer needed in CMSSW_10_2_15
-# git clone https://github.com/cms-nanoAOD/PhysicsTools-NanoAOD.git $CMSSW_BASE/external/$SCRAM_ARCH/data/PhysicsTools/NanoAOD/data
-
-# this one adds the trigger prescale
-# git cms-merge-topic -u hqucms:custom-nano-94X-add-trigger-prescales
-```
-
-### Merge dev branch for ParticleNet
-
-```bash
-# setup ONNXRuntime and set MLAS_DYNAMIC_CPU_ARCH=99
-sed -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH" value="99"/g' /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_11_0_0_pre13/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml > $CMSSW_BASE/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml
-scram setup $CMSSW_BASE/config/toolbox/slc7_amd64_gcc820/tools/selected/onnxruntime.xml
+# set MLAS_DYNAMIC_CPU_ARCH=99 in ONNXRuntime 
+sed -i -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH" value="99"/g' $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml
+scram setup $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml
 
 # setup OpenBLAS w/ DYNAMIC_ARCH=1
 scram setup /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS-toolfile/1.0-cms/etc/scram.d/OpenBLAS.xml
 cp -a --remove-destination /afs/cern.ch/user/h/hqu/work/ak8-cmssw/onnx-runtime/build-20191112-v1.0.0/CMSSW_11_0_0_pre11/pkgs/slc7_amd64_gcc820/external/OpenBLAS/0.3.5-cms/lib/libopenblas* $CMSSW_BASE/external/slc7_amd64_gcc820/lib
 
-# get data files
-mkdir $CMSSW_BASE/external/slc7_amd64_gcc820/data
-cp -r /afs/cern.ch/user/h/hqu/public/ParticleNet-V00/RecoBTag $CMSSW_BASE/external/slc7_amd64_gcc820/data/
+# TODO: disable DeepTau
 
-# merge dev branch
-git cms-merge-topic -u hqucms:dev/particle-net-decorr-11X
-
-# or if you do not need DeepTau
-# git cms-merge-topic -u hqucms:dev/particle-net-decorr-11X-disable-deepTau
-
-# fix NanoAOD weight name
-sed -i -e 's/std::string label = std::string("_") + x.first;/std::string label = x.first.empty() ? "" : std::string("_") + x.first;/g' $CMSSW_BASE/src/PhysicsTools/NanoAOD/plugins/GenWeightsTableProducer.cc
 ```
 
 ### Get customized NanoAOD producers
 
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b dev/11X/PNet
+git clone ssh://git@gitlab.cern.ch:7999/hqu/NanoTuples.git PhysicsTools/NanoTuples -b dev/11X/pfcands
 ```
 
 ### Compile
@@ -63,7 +40,7 @@ scram b -j16
 MC (2016, 94X, MiniAODv3):
 
 ```bash
-cmsDriver.py test_nanoTuples_mc2016 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mcRun2_asymptotic_v7 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIISummer16MiniAODv3/TTToSemilepton_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3-v2/80000/FEC61D42-F5F5-E811-8435-001E67A4061D.root --fileout file:nano_mc2016.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2016.log &
+cmsDriver.py test_nanoTuples_mc2016 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mcRun2_asymptotic_v8 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIISummer16MiniAODv3/TTToSemilepton_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_94X_mcRun2_asymptotic_v3-v2/80000/FEC61D42-F5F5-E811-8435-001E67A4061D.root --fileout file:nano_mc2016.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2016.log &
 
 less +F test_mc2016.log
 ```
@@ -71,7 +48,7 @@ less +F test_mc2016.log
 Data (2016, 94X, MiniAODv3):
 
 ```bash
-cmsDriver.py test_nanoTuples_data2016 -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v11 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2016H/MET/MINIAOD/17Jul2018-v2/00000/0A0B71F7-75B8-E811-BAB7-0425C5DE7BE4.root --fileout file:nano_data2016.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2016.log &
+cmsDriver.py test_nanoTuples_data2016 -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2016H/MET/MINIAOD/17Jul2018-v2/00000/0A0B71F7-75B8-E811-BAB7-0425C5DE7BE4.root --fileout file:nano_data2016.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2016.log &
 
 less +F test_data2016.log
 ```
@@ -80,7 +57,7 @@ less +F test_data2016.log
 MC (2017, 94X, MiniAODv2):
 
 ```bash
-cmsDriver.py test_nanoTuples_mc2017 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mc2017_realistic_v7 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIIFall17MiniAODv2/ZprimeToTT_M3000_W30_TuneCP2_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/50000/20FF99D9-702A-E911-B801-0025904CFB86.root --fileout file:nano_mc2017.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2017.log &
+cmsDriver.py test_nanoTuples_mc2017 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mc2017_realistic_v8 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIIFall17MiniAODv2/ZprimeToTT_M3000_W30_TuneCP2_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/50000/20FF99D9-702A-E911-B801-0025904CFB86.root --fileout file:nano_mc2017.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2017.log &
 
 less +F test_mc2017.log
 ```
@@ -88,7 +65,7 @@ less +F test_mc2017.log
 Data (2017, 94X, MiniAODv2):
 
 ```bash
-cmsDriver.py test_nanoTuples_data2017 -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v11 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2017D/JetHT/MINIAOD/31Mar2018-v1/60000/1EEE02D3-E539-E811-9859-0025905A6066.root --fileout file:nano_data2017.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2017.log &
+cmsDriver.py test_nanoTuples_data2017 -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2017D/JetHT/MINIAOD/31Mar2018-v1/60000/1EEE02D3-E539-E811-9859-0025905A6066.root --fileout file:nano_data2017.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2017.log &
 
 less +F test_data2017.log
 ```
@@ -97,7 +74,7 @@ less +F test_data2017.log
 MC (2018, 102X):
 
 ```bash
-cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_upgrade2018_realistic_v20 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIIAutumn18MiniAOD/ZprimeToTT_M3000_W30_TuneCP2_PSweights_13TeV-madgraphMLM-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/90000/1CFAC15C-895C-CD44-BC86-58EE90CBF456.root --fileout file:nano_mc2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2018.log &
+cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_upgrade2018_realistic_v21 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIIAutumn18MiniAOD/ZprimeToTT_M3000_W30_TuneCP2_PSweights_13TeV-madgraphMLM-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/90000/1CFAC15C-895C-CD44-BC86-58EE90CBF456.root --fileout file:nano_mc2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2018.log &
 
 less +F test_mc2018.log
 ```
@@ -121,44 +98,44 @@ source /cvmfs/cms.cern.ch/crab3/crab.sh
 MC (2016, 94X, MiniAODv3):
 
 ```bash
-cmsDriver.py mc2016 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mcRun2_asymptotic_v7 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py mc2016 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mcRun2_asymptotic_v8 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 Data (2016, 94X, MiniAODv3):
 
 ```bash
-cmsDriver.py data2016 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v11 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py data2016 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2016,run2_nanoAOD_94X2016 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 
 MC (2017, 94X, MiniAODv2):
 
 ```bash
-cmsDriver.py mc2017 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mc2017_realistic_v7 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py mc2017 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_mc2017_realistic_v8 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 Data (2017, 94X, MiniAODv2):
 
 ```bash
-cmsDriver.py data2017 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v11 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py data2017 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 MC (2018, 102X):
 
 ```bash
-cmsDriver.py mc2018 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_upgrade2018_realistic_v20 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py mc2018 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 102X_upgrade2018_realistic_v21 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 Data (2018ABC, 102X):
 
 ```bash
-cmsDriver.py data2018abc -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v12 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py data2018abc -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 Data (2018D, 102X):
 
 ```bash
-cmsDriver.py data2018d -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_Prompt_v15 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
+cmsDriver.py data2018d -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_Prompt_v16 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_102Xv1 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
 

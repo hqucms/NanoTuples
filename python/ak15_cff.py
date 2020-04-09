@@ -1,16 +1,18 @@
 import FWCore.ParameterSet.Config as cms
+from Configuration.Eras.Modifier_run2_jme_2016_cff import run2_jme_2016
+from Configuration.Eras.Modifier_run2_jme_2017_cff import run2_jme_2017
+
 from PhysicsTools.NanoAOD.common_cff import *
-from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
-from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
 
 # ---------------------------------------------------------
 
 
-def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runParticleNetMD=True):
+def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runParticleNetMD=True, addPFCands=True):
     # recluster Puppi jets
     bTagDiscriminators = [
         'pfJetProbabilityBJetTags',
         'pfCombinedInclusiveSecondaryVertexV2BJetTags',
+        'pfDeepCSVJetTags',
     ]
     subjetBTagDiscriminators = [
         'pfJetProbabilityBJetTags',
@@ -79,21 +81,24 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
 
     process.tightJetIdAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
         filterParams=cms.PSet(
-            version=cms.string('WINTER17'),
+            version=cms.string('SUMMER18PUPPI'),
             quality=cms.string('TIGHT'),
         ),
         src=srcJets
     )
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER16")
 
     process.tightJetIdLepVetoAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
         filterParams=cms.PSet(
-            version=cms.string('WINTER17'),
+            version=cms.string('SUMMER18PUPPI'),
             quality=cms.string('TIGHTLEPVETO'),
         ),
         src=srcJets
     )
+
+    run2_jme_2016.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER16")
+    run2_jme_2016.toModify(process.tightJetIdLepVetoAK15Puppi.filterParams, version="WINTER16")
+    run2_jme_2017.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER17PUPPI")
+    run2_jme_2017.toModify(process.tightJetIdLepVetoAK15Puppi.filterParams, version="WINTER17PUPPI")
 
     process.ak15WithUserData = cms.EDProducer("PATJetUserDataEmbedder",
         src=srcJets,
@@ -103,11 +108,10 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
             tightIdLepVeto=cms.InputTag("tightJetIdLepVetoAK15Puppi"),
         ),
     )
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.ak15WithUserData.userInts,
-            looseId=cms.InputTag("looseJetIdAK15Puppi"),
-            tightIdLepVeto=None,
-        )
+    run2_jme_2016.toModify(process.ak15WithUserData.userInts,
+        looseId=cms.InputTag("looseJetIdAK15Puppi"),
+        tightIdLepVeto=None,
+    )
 
     process.ak15Table = cms.EDProducer("SimpleCandidateFlatTableProducer",
         src=cms.InputTag("ak15WithUserData"),
@@ -120,11 +124,13 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
             jetId=Var("userInt('tightId')*2+4*userInt('tightIdLepVeto')", int, doc="Jet ID flags bit1 is loose (always false in 2017 since it does not exist), bit2 is tight, bit3 is tightLepVeto"),
             area=Var("jetArea()", float, doc="jet catchment area, for JECs", precision=10),
             rawFactor=Var("1.-jecFactor('Uncorrected')", float, doc="1 - Factor to get back to raw pT", precision=6),
+            nPFConstituents=Var("numberOfDaughters()", int, doc="Number of PF candidate constituents"),
             tau1=Var("userFloat('NjettinessAK15Puppi:tau1')", float, doc="Nsubjettiness (1 axis)", precision=10),
             tau2=Var("userFloat('NjettinessAK15Puppi:tau2')", float, doc="Nsubjettiness (2 axis)", precision=10),
             tau3=Var("userFloat('NjettinessAK15Puppi:tau3')", float, doc="Nsubjettiness (3 axis)", precision=10),
             msoftdrop=Var("groomedMass()", float, doc="Corrected soft drop mass with PUPPI", precision=10),
             btagCSVV2=Var("bDiscriminator('pfCombinedInclusiveSecondaryVertexV2BJetTags')", float, doc="pfCombinedInclusiveSecondaryVertexV2 b-tag discriminator (aka CSVV2)", precision=10),
+            btagDeepB=Var("bDiscriminator('pfDeepCSVJetTags:probb')+bDiscriminator('pfDeepCSVJetTags:probbb')", float, doc="DeepCSV b+bb tag discriminator", precision=10),
             btagJP=Var("bDiscriminator('pfJetProbabilityBJetTags')", float, doc="pfJetProbabilityBJetTags b-tag discriminator (aka JP)", precision=10),
             nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", int, doc="number of b-hadrons"),
             nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", int, doc="number of c-hadrons"),
@@ -134,8 +140,7 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
                  doc="index of second subjet"),
         )
     )
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
+    run2_jme_2016.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
     process.ak15Table.variables.pt.precision = 10
 
     # add nominal taggers
@@ -205,10 +210,40 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
         process.ak15Task.add(process.genJetAK15Table)
         process.ak15Task.add(process.genSubJetAK15Table)
 
-    _ak15Task_80X = process.ak15Task.copy()
-    _ak15Task_80X.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)
-    for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-        modifier.toReplaceWith(process.ak15Task, _ak15Task_80X)
+    if addPFCands:
+        process.ak15ConstituentsTable = cms.EDProducer("JetConstituentTableProducer",
+                                                       src=process.ak15Table.src,
+                                                       cut=process.ak15Table.cut,
+                                                       name=cms.string("AK15PuppiPFCands"),
+                                                       )
+
+        process.ak15ConstituentsExtTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
+                                                          src=cms.InputTag("ak15ConstituentsTable"),
+                                                          cut=cms.string(""),  # we should not apply any further cut
+                                                          name=process.ak15ConstituentsTable.name,
+                                                          doc=cms.string("pfcands from AK15 jets"),
+                                                          singleton=cms.bool(False),
+                                                          extension=cms.bool(True),  # set to ``True``: this is the extension table of ak15ConstituentsTable
+                                                          variables=cms.PSet(CandVars,
+                                                                             puppiWeight=Var("puppiWeight()", float, doc="Puppi weight", precision=10),
+                                                                             vtxChi2=Var("?hasTrackDetails()?vertexChi2():-1", float, doc="vertex chi2", precision=10),
+                                                                             trkChi2=Var("?hasTrackDetails()?pseudoTrack().normalizedChi2():-1", float, doc="normalized trk chi2", precision=10),
+                                                                             dz=Var("dz()", float, doc="pf dz", precision=10),
+                                                                             dzErr=Var("?hasTrackDetails()?dzError():-1", float, doc="pf dz err", precision=10),
+                                                                             d0=Var("dxy()", float, doc="pf d0", precision=10),
+                                                                             d0Err=Var("?hasTrackDetails()?dxyError():-1", float, doc="pf d0 err", precision=10),
+                                                                             pvAssocQuality=Var("pvAssociationQuality()", int, doc="primary vertex association quality"),
+                                                                             lostInnerHits=Var("lostInnerHits()", int, doc="lost inner hits"),
+                                                                             trkQuality=Var("?hasTrackDetails()?pseudoTrack().qualityMask():0", int, doc="track quality mask"),
+                                                                             )
+                                                          )
+
+    process.ak15Task.add(process.ak15ConstituentsTable)
+    process.ak15Task.add(process.ak15ConstituentsExtTable)
+
+    _ak15Task_2016 = process.ak15Task.copy()
+    _ak15Task_2016.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)
+    run2_jme_2016.toReplaceWith(process.ak15Task, _ak15Task_2016)
 
     if path is None:
         process.schedule.associate(process.ak15Task)
