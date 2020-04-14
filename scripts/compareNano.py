@@ -26,9 +26,13 @@ for k in branches:
     a1 = t1.array(k)
     a2 = t2.array(k)
     if isinstance(a1, np.ndarray):
-       same = np.all(a1 == a2)
+        same = np.all(a1 == a2)
     else:
-       same = np.all(a1.counts == a2.counts) and np.all(a1.content == a2.content)
+        same = np.all(a1.counts == a2.counts) and np.all(a1.content == a2.content)
     if not same:
-       print(k)
-       print(' ... a1=%s\n ... a2=%s' % (a1[:5], a2[:5]))
+        if isinstance(a1, np.ndarray):
+            close = np.allclose(a1, a2, rtol=1e-3, atol=1e-3, equal_nan=True)
+        else:
+            close = np.all(a1.counts == a2.counts) and np.allclose(a1.content, a2.content, rtol=1e-3, atol=1e-3, equal_nan=True)
+        print(k, '(close)' if close else '')
+        print(' ... a1=%s\n ... a2=%s' % (a1[:5], a2[:5]))
