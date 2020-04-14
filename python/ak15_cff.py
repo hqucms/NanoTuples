@@ -7,7 +7,7 @@ from PhysicsTools.NanoAOD.common_cff import *
 # ---------------------------------------------------------
 
 
-def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runParticleNetMD=True, addPFCands=True):
+def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runParticleNetMD=True):
     # recluster Puppi jets
     bTagDiscriminators = [
         'pfJetProbabilityBJetTags',
@@ -215,37 +215,6 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
 
         process.ak15Task.add(process.genJetAK15Table)
         process.ak15Task.add(process.genSubJetAK15Table)
-
-    if addPFCands:
-        process.ak15ConstituentsTable = cms.EDProducer("JetConstituentTableProducer",
-                                                       src=process.ak15Table.src,
-                                                       cut=process.ak15Table.cut,
-                                                       name=cms.string("AK15PuppiPFCands"),
-                                                       )
-
-        process.ak15ConstituentsExtTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
-                                                          src=cms.InputTag("ak15ConstituentsTable"),
-                                                          cut=cms.string(""),  # we should not apply any further cut
-                                                          name=process.ak15ConstituentsTable.name,
-                                                          doc=cms.string("pfcands from AK15 jets"),
-                                                          singleton=cms.bool(False),
-                                                          extension=cms.bool(True),  # set to ``True``: this is the extension table of ak15ConstituentsTable
-                                                          variables=cms.PSet(CandVars,
-                                                                             puppiWeight=Var("puppiWeight()", float, doc="Puppi weight", precision=10),
-                                                                             vtxChi2=Var("?hasTrackDetails()?vertexChi2():-1", float, doc="vertex chi2", precision=10),
-                                                                             trkChi2=Var("?hasTrackDetails()?pseudoTrack().normalizedChi2():-1", float, doc="normalized trk chi2", precision=10),
-                                                                             dz=Var("dz()", float, doc="pf dz", precision=10),
-                                                                             dzErr=Var("?hasTrackDetails()?dzError():-1", float, doc="pf dz err", precision=10),
-                                                                             d0=Var("dxy()", float, doc="pf d0", precision=10),
-                                                                             d0Err=Var("?hasTrackDetails()?dxyError():-1", float, doc="pf d0 err", precision=10),
-                                                                             pvAssocQuality=Var("pvAssociationQuality()", int, doc="primary vertex association quality"),
-                                                                             lostInnerHits=Var("lostInnerHits()", int, doc="lost inner hits"),
-                                                                             trkQuality=Var("?hasTrackDetails()?pseudoTrack().qualityMask():0", int, doc="track quality mask"),
-                                                                             )
-                                                          )
-
-    process.ak15Task.add(process.ak15ConstituentsTable)
-    process.ak15Task.add(process.ak15ConstituentsExtTable)
 
     _ak15Task_2016 = process.ak15Task.copy()
     _ak15Task_2016.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)

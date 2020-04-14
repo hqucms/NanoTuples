@@ -1,6 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import Var
 from PhysicsTools.NanoTuples.ak15_cff import setupAK15
+from PhysicsTools.NanoTuples.ak8_cff import addParticleNetAK8
+from PhysicsTools.NanoTuples.pfcands_cff import addPFCands
 
 
 def nanoTuples_customizeVectexTable(process):
@@ -49,6 +51,10 @@ def _fix_tau_global_tag(process):
 
 def nanoTuples_customizeCommon(process, runOnMC):
     setupAK15(process, runOnMC=runOnMC)
+    addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True)
+    addPFCands(process)
+#     addPFCands(process, jetCollections={'ak15':process.ak15Table.src, 'ak8':process.fatJetTable.src}, tableName='JetPFCands')
+
     nanoTuples_customizeVectexTable(process)
     nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)
     _fix_tau_global_tag(process)

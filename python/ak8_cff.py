@@ -5,8 +5,58 @@ from Configuration.Eras.Modifier_run2_jme_2017_cff import run2_jme_2017
 from PhysicsTools.NanoAOD.common_cff import *
 
 # ---------------------------------------------------------
+def addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True):
+    if not runParticleNet and not runParticleNetMD:
+        return process
+
+    from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+    from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs as pfParticleNetJetTagsProbs
+    from RecoBTag.MXNet.pfParticleNet_cff import _pfMassDecorrelatedParticleNetJetTagsProbs as pfMassDecorrelatedParticleNetJetTagsProbs
+
+    JETCorrLevels = ['L2Relative', 'L3Absolute', 'L2L3Residual']
+    bTagDiscriminators = []
+    if runParticleNet:
+        bTagDiscriminators += pfParticleNetJetTagsProbs
+    if runParticleNetMD:
+        bTagDiscriminators += pfMassDecorrelatedParticleNetJetTagsProbs
+
+    updateJetCollection(
+        process,
+        jetSource=cms.InputTag('selectedUpdatedPatJetsAK8WithDeepInfo'),
+        rParam=0.8,
+        jetCorrections=('AK8PFPuppi', cms.vstring(JETCorrLevels), 'None'),
+        btagDiscriminators=bTagDiscriminators,
+        postfix='AK8WithParticleNet',
+    )
+    process.jetCorrFactorsAK8.src = "selectedUpdatedPatJetsAK8WithParticleNet"
+    process.updatedJetsAK8.jetSource = "selectedUpdatedPatJetsAK8WithParticleNet"
+
+    from RecoBTag.ONNXRuntime.pfDeepBoostedJetTags_cfi import pfDeepBoostedJetTags as _pfDeepBoostedJetTags
+#     if runParticleNetMD:
+#         process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet = _pfDeepBoostedJetTags.clone(
+#             src=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.src,
+#             flav_names=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.flav_names,
+#             preprocessParams=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.preprocessParams,
+#             model_path='PhysicsTools/NanoTuples/data/ParticleNet-MD/ak8/ParticleNetMD.onnx',
+#             )
+
+    # add nominal taggers
+    if runParticleNet:
+        for prob in pfParticleNetJetTagsProbs:
+            name = 'ParticleNet_' + prob.split(':')[1]
+            setattr(process.fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+
+    # add mass-decorelated taggers
+    if runParticleNetMD:
+        for prob in pfMassDecorrelatedParticleNetJetTagsProbs:
+            name = 'ParticleNetMD_' + prob.split(':')[1]
+            setattr(process.fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+
+    return process
 
 
+
+# ---------------------------------------------------------
 def setupCustomizedAK8(process, runOnMC=False, path=None):
     # recluster Puppi jets
     bTagDiscriminators = [
