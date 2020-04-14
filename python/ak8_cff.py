@@ -32,13 +32,20 @@ def addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True):
     process.updatedJetsAK8.jetSource = "selectedUpdatedPatJetsAK8WithParticleNet"
 
     from RecoBTag.ONNXRuntime.pfDeepBoostedJetTags_cfi import pfDeepBoostedJetTags as _pfDeepBoostedJetTags
-#     if runParticleNetMD:
-#         process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet = _pfDeepBoostedJetTags.clone(
-#             src=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.src,
-#             flav_names=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.flav_names,
-#             preprocessParams=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.preprocessParams,
-#             model_path='PhysicsTools/NanoTuples/data/ParticleNet-MD/ak8/ParticleNetMD.onnx',
-#             )
+    if runParticleNet:
+        process.pfParticleNetJetTagsAK8WithParticleNet = _pfDeepBoostedJetTags.clone(
+            src=process.pfParticleNetJetTagsAK8WithParticleNet.src,
+            flav_names=process.pfParticleNetJetTagsAK8WithParticleNet.flav_names,
+            preprocessParams=process.pfParticleNetJetTagsAK8WithParticleNet.preprocessParams,
+            model_path='PhysicsTools/NanoTuples/data/ParticleNet/ak8/ParticleNet.onnx',
+            )
+    if runParticleNetMD:
+        process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet = _pfDeepBoostedJetTags.clone(
+            src=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.src,
+            flav_names=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.flav_names,
+            preprocessParams=process.pfMassDecorrelatedParticleNetJetTagsAK8WithParticleNet.preprocessParams,
+            model_path='PhysicsTools/NanoTuples/data/ParticleNet-MD/ak8/ParticleNetMD.onnx',
+            )
 
     # add nominal taggers
     if runParticleNet:
