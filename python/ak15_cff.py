@@ -216,6 +216,11 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
         process.ak15Task.add(process.genJetAK15Table)
         process.ak15Task.add(process.genSubJetAK15Table)
 
+        ###### hack to avoid circular dependency ######
+        process.jetMC.remove(process.patJetPartons)
+        process.ak15Task.add(process.patJetPartons)
+        ###############################################
+
     _ak15Task_2016 = process.ak15Task.copy()
     _ak15Task_2016.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)
     run2_jme_2016.toReplaceWith(process.ak15Task, _ak15Task_2016)

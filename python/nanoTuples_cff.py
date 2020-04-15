@@ -41,12 +41,8 @@ def nanoTuples_customizeMetTable(process):
     process.metTable.variables.smearMetJetResUpDeltaY = Var("shiftedPy('JetResUp','Type1Smear')-shiftedPy('NoShift','Type1Smear')", float, doc="Delta (smearMETy_mod-smearMETy) JER Up", precision=10)
     process.metTable.variables.smearMetUnclustEnUpDeltaX = Var("shiftedPx('UnclusteredEnUp','Type1Smear')-shiftedPx('NoShift','Type1Smear')", float, doc="Delta (smearMETx_mod-smearMETx) UnclusteredEn Up", precision=10)
     process.metTable.variables.smearMetUnclustEnUpDeltaY = Var("shiftedPy('UnclusteredEnUp','Type1Smear')-shiftedPy('NoShift','Type1Smear')", float, doc="Delta (smearMETy_mod-smearMETy) UnclusteredEn Up", precision=10)
-
-    process.metFixEE2017Table = process.metTable.clone(
-        src="slimmedMETsFixEE2017",
-        name="METFixEE2017",
-        doc="Type-1 corrected PF MET, with fixEE2017 definition",
-        )
+    # use the same for metFixEE2017
+    process.metFixEE2017Table.variables = process.metTable.variables.clone()
     return process
 
 
@@ -70,7 +66,12 @@ def _fix_tau_global_tag(process):
 def nanoTuples_customizeCommon(process, runOnMC):
     setupAK15(process, runOnMC=runOnMC)
     addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True)
-    addPFCands(process, jetCollections={'ak15':process.ak15Table.src, 'ak8':process.fatJetTable.src}, tableName='JetPFCands')
+    addPFCands(process,
+               srcs=('ak15WithUserData', 'updatedJetsAK8WithUserData'),
+               isPuppiJets=(True, True),
+               jetTables=('ak15Table', 'fatJetTable'),
+               outTableName='PFCands',
+               )
 
     nanoTuples_customizeVectexTable(process)
     nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)

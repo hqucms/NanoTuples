@@ -2,28 +2,32 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
 
-def addPFCands(process, jetCollections={'ak15':'ak15WithUserData'}, tableName='AK15PuppiPFCands', path=None):
+def addPFCands(process, srcs=[], isPuppiJets=[], jetTables=[], cuts=None, outTableName='PFCands', path=None):
+    if len(srcs) == 0:
+        return
 
+    if cuts is None:
+        cuts = [None for _ in jetTables]
+    jetTables = [getattr(process, tbl_name) for tbl_name in jetTables]
     jets = {}
-    for jetname in jetCollections:
-        src = jetCollections[jetname]
-        if not isinstance(src, cms.InputTag):
-            src = cms.InputTag(src)
+    for src, jet_table, is_puppi, cut in zip(srcs, jetTables, isPuppiJets, cuts):
+        jetname = jet_table.name.value()
         jets[jetname] = cms.PSet(
-            src=src,
-            isPuppi=cms.bool('chs' not in jetname.lower()),
-            cut=cms.string(''),
+            src=cms.InputTag(src),
+            isPuppi=cms.bool(is_puppi),
+            cut=jet_table.cut if cut is None else cms.string(cut),
             )
 
     process.jetConstituentsTable = cms.EDProducer("JetConstituentTableProducer",
                                                   jets=cms.PSet(**jets),
-                                                  name=cms.string(tableName),
+                                                  name=cms.string(outTableName),
+                                                  check_indices=cms.bool(False),  # turn on for debugging
                                                   )
 
     process.jetConstituentsExtTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
-                                                     src=cms.InputTag("jetConstituentsTable"),
+                                                     src=cms.InputTag("jetConstituentsTable", "constituents"),
                                                      cut=cms.string(""),  # we should not apply any further cut
-                                                     name=process.jetConstituentsTable.name,
+                                                     name=cms.string(outTableName),
                                                      doc=cms.string("pfcands from jets"),
                                                      singleton=cms.bool(False),
                                                      extension=cms.bool(True),  # set to ``True``: this is the extension table of jetConstituentsTable
@@ -45,6 +49,13 @@ def addPFCands(process, jetCollections={'ak15':'ak15WithUserData'}, tableName='A
         process.jetConstituentsTable,
         process.jetConstituentsExtTable,
         )
+
+    # add nPFCands to the jet tables
+    for jet_table in jetTables:
+        jetname = jet_table.name.value()
+        externalVariables = getattr(jet_table, 'externalVariables', cms.PSet())
+        externalVariables.nPFCand = ExtVar(cms.InputTag("jetConstituentsTable", jetname + 'Npfcand'), int, doc="number of selected PFCands stored in the %s table" % outTableName)
+        jet_table.externalVariables = externalVariables
 
     if path is None:
         process.schedule.associate(process.pfcandTask)
