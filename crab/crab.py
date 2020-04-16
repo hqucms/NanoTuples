@@ -27,6 +27,7 @@ def configLogger(name, loglevel=logging.INFO):
 
 logger = logging.getLogger('autocrab')
 configLogger('autocrab')
+_separator = '-' * 50
 
 
 def natural_sort(l):
@@ -67,7 +68,7 @@ def parseDatasetName(dataset):
     return procname, vername, ext, isMC
 
 
-def getDatasetSiteInfo(dataset, retry=3):
+def getDatasetSiteInfo(dataset, retry=2):
     """Return dataset storage sites for given DAS query via dasgoclient"""
     import subprocess
     import time
@@ -81,7 +82,9 @@ def getDatasetSiteInfo(dataset, retry=3):
             time.sleep(3)
         retry_count += 1
         if retry_count > retry:
-            raise RuntimeError('Failed to retrieve site info from DAS for: %s' % dataset)
+            logger.error('Failed to retrieve site info from DAS for: %s' % dataset)
+            return None, None
+#             raise RuntimeError('Failed to retrieve site info from DAS for: %s' % dataset)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         outs, errs = proc.communicate()
         if errs:
@@ -149,11 +152,12 @@ def createConfig(args, dataset):
         config.Site.whitelist = ['T3_US_FNALLPC']
         config.Site.ignoreGlobalBlacklist = True
 
-    on_fnal_disk, t2_sites = getDatasetSiteInfo(dataset)
-    if on_fnal_disk and len(t2_sites) < 3:
-        config.General.requestName = config.General.requestName + '-remote'
-        config.Data.ignoreLocality = True
-        config.Site.whitelist = ['T2_US_*'] + t2_sites
+    if args.allow_remote:
+        on_fnal_disk, t2_sites = getDatasetSiteInfo(dataset)
+        if on_fnal_disk and len(t2_sites) < 3:
+            config.General.requestName = config.General.requestName + '-remote'
+            config.Data.ignoreLocality = True
+            config.Site.whitelist = ['T2_US_*'] + t2_sites
 
     # write config file
     cfgdir = os.path.join(args.work_area, 'configs')
@@ -300,6 +304,10 @@ def summary_from_log_file():
     summary = {}
     with open('autocrab.log') as f:
         for l in f:
+            if _separator in l:
+                # skip all previous runs
+                summary = {}
+                continue
             l = l.strip()
             if l[:2] == "{'":
                 s = ast.literal_eval(l)
@@ -379,6 +387,10 @@ def main():
                         action='store_true', default=False,
                         help='Run at FNAL LPC. Default: %(default)s'
                         )
+    parser.add_argument('--allow-remote',
+                        action='store_true', default=False,
+                        help='Allow jobs to run remotely under certain conditions. Default: %(default)s'
+                        )
     parser.add_argument('--status',
                         action='store_true', default=False,
                         help='Check job status. Will resubmit if there are failed jobs. Default: %(default)s'
@@ -408,6 +420,9 @@ def main():
     if args.summary:
         summary_from_log_file()
         return
+
+    # write a separator to distinguish between different runs
+    logger.info(_separator)
 
     if args.status:
         status(args)
