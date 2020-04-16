@@ -74,6 +74,7 @@ def nanoTuples_customizeCommon(process, runOnMC):
                )
 
     nanoTuples_customizeVectexTable(process)
+    nanoTuples_customizeMetTable(process)
     nanoTuples_customizeFatJetTable(process, runOnMC=runOnMC)
     _fix_tau_global_tag(process)
 
