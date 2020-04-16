@@ -245,13 +245,27 @@ def _analyze_crab_status(ret):
 
 def status(args):
     import os
+    import json
     kwargs = parseOptions(args)
     for work_area in args.work_area:
+        # load status from last query
+        _task_status_file = os.path.join(work_area, 'task_status.json')
+        crab_task_status = {}
+        if os.path.exists(_task_status_file):
+            with open(_task_status_file) as f:
+                crab_task_status = json.load(f)
+
         jobnames = [d for d in os.listdir(work_area) if d.startswith('crab_')]
         finished = 0
         job_status = {}
         submit_failed = []
         for dirname in jobnames:
+            # skip jobs that are already completed
+            if dirname in crab_task_status:
+                if crab_task_status[dirname].get('status', '') == 'COMPLETED':
+                    logger.info('Skip completed job %s' % dirname)
+                    finished += 1
+                    continue
             logger.info('Checking status of job %s' % dirname)
             ret = runCrabCommand('status', dir='%s/%s' % (work_area, dirname))
             try:
@@ -267,9 +281,11 @@ def status(args):
             pcts_str = ' (\033[1;%dm%.1f%%\033[0m)' % (32 if percent_finished > 90 else 34 if percent_finished > 70 else 35 if percent_finished > 50 else 31, percent_finished)
             job_status[dirname] = ret['status'] + pcts_str + '\n    ' + str(states)
             if ret['publicationEnabled']:
-                pcts_published = 100.*ret['publication'].get('done', 0) / max(sum(states.values()), 1)
+                pcts_published = 100.* ret['publication'].get('done', 0) / max(sum(states.values()), 1)
                 pub_pcts_str = '\033[1;%dm%.1f%%\033[0m' % (32 if pcts_published > 90 else 34 if pcts_published > 70 else 35 if pcts_published > 50 else 31, pcts_published)
                 job_status[dirname] = job_status[dirname] + '\n    publication: ' + pub_pcts_str + ' ' + str(ret['publication'])
+                if ret['status'] == 'COMPLETED' and pcts_published != 100:
+                    ret['status'] == 'PUBLISHING'
 
             if ret['status'] == 'COMPLETED':
                 finished += 1
@@ -292,11 +308,18 @@ def status(args):
                 logger.info('Resubmitting job %s for failed publication' % dirname)
                 runCrabCommand('resubmit', dir='%s/%s' % (work_area, dirname), publication=True)
 
+            # save this
+            crab_task_status[dirname] = ret
+
         logger.info('====== Summary (%s) ======\n' % (work_area) +
                      '\n'.join(['%s: %s' % (k, job_status[k]) for k in natural_sort(job_status.keys())]))
         logger.info('%d/%d jobs completed!' % (finished, len(jobnames)))
         if len(submit_failed):
             logger.warning('Submit failed:\n%s' % '\n'.join(submit_failed))
+
+        # write job status file
+        with open(_task_status_file, 'w') as f:
+            json.dump(crab_task_status, f, indent=2)
 
 
 def summary_from_log_file():
@@ -316,7 +339,7 @@ def summary_from_log_file():
                         summary[k] = s[k]
                     else:
                         summary[k] += s[k]
-    print(summary)
+    print(' === Summary: ', summary)
 
 
 def main():
