@@ -38,7 +38,8 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
 
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs as pfParticleNetJetTagsProbs
-    from RecoBTag.MXNet.pfParticleNet_cff import _pfMassDecorrelatedParticleNetJetTagsProbs as pfMassDecorrelatedParticleNetJetTagsProbs
+    ak15_flav_names = ["probQCDothers", "probXbb", "probXcc", "probXqq"]  # FIXME
+    pfMassDecorrelatedParticleNetJetTagsProbs = ['pfMassDecorrelatedParticleNetJetTags:' + n for n in ak15_flav_names]  # FIXME
 
     if runParticleNet:
         bTagDiscriminators += pfParticleNetJetTagsProbs
@@ -66,11 +67,13 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     if runParticleNetMD:
         process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
         from PhysicsTools.NanoTuples.pfMassDecorrelatedParticleNetPreprocessParamsAK15_cfi import pfMassDecorrelatedParticleNetPreprocessParamsAK15
+        # FIXME
         process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet = _pfDeepBoostedJetTags.clone(
             src = process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.src,
-            flav_names = process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.flav_names,
+            flav_names = ak15_flav_names,
             preprocessParams = pfMassDecorrelatedParticleNetPreprocessParamsAK15,
             model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNetMD.onnx',
+#             debugMode=True
             )
 
     # src
@@ -159,6 +162,7 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     if runParticleNetMD:
         for prob in pfMassDecorrelatedParticleNetJetTagsProbs:
             name = 'ParticleNetMD_' + prob.split(':')[1]
+            name = name.replace('QCDothers', 'QCD')  # FIXME
             setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     process.ak15SubJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",

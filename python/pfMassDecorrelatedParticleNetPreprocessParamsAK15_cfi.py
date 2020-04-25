@@ -10,90 +10,90 @@ pfMassDecorrelatedParticleNetPreprocessParamsAK15 = cms.PSet(
         'sv_mask'
     ),
     pf_features = cms.PSet(
-        input_shape = cms.vuint32(1, 20, 100),
         var_infos = cms.PSet(
             pfcand_VTX_ass = cms.PSet(
-                median = cms.double(7.0),
-                norm_factor = cms.double(0.5)
+                median = cms.double(4),
+                norm_factor = cms.double(0.3)
             ),
             pfcand_abseta = cms.PSet(
-                median = cms.double(0.704061985016),
-                norm_factor = cms.double(1.42180856942)
+                median = cms.double(0.7),
+                norm_factor = cms.double(1.4)
             ),
             pfcand_btagEtaRel = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(0.426671793464)
+                median = cms.double(2),
+                norm_factor = cms.double(0.4)
             ),
             pfcand_btagJetDistVal = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(145.473299395)
+                median = cms.double(0),
+                norm_factor = cms.double(145)
             ),
             pfcand_btagPParRatio = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(1.01681132268)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_btagPtRatio = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(1.9316753054)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_btagSip3dSig = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(0.964987250714)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_btagSip3dVal = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(230.394748655)
+                median = cms.double(0),
+                norm_factor = cms.double(230)
             ),
             pfcand_charge = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(1.0)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_dxy = cms.PSet(
                 median = cms.double(0.0),
-                norm_factor = cms.double(258.422706714)
+                norm_factor = cms.double(250)
             ),
             pfcand_dxysig = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(1.86056529822)
+                median = cms.double(0),
+                norm_factor = cms.double(1.6)
             ),
             pfcand_dz = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(171.380755873)
+                median = cms.double(0),
+                norm_factor = cms.double(170)
             ),
             pfcand_dzsig = cms.PSet(
-                median = cms.double(0.0),
-                norm_factor = cms.double(1.38224973484)
+                median = cms.double(0),
+                norm_factor = cms.double(1.2)
             ),
             pfcand_e_log_nopuppi = cms.PSet(
-                median = cms.double(0.960983216763),
-                norm_factor = cms.double(0.602489542217)
+                median = cms.double(1),
+                norm_factor = cms.double(0.6)
             ),
             pfcand_etarel = cms.PSet(
-                median = cms.double(-0.0385179147124),
-                norm_factor = cms.double(2.00600043717)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_lostInnerHits = cms.PSet(
-                median = cms.double(-1.0),
-                norm_factor = cms.double(1.0)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_normchi2 = cms.PSet(
-                median = cms.double(999.0),
-                norm_factor = cms.double(0.001001001001)
+                median = cms.double(5),
+                norm_factor = cms.double(0.2)
             ),
             pfcand_phirel = cms.PSet(
-                median = cms.double(-0.00015363653074),
-                norm_factor = cms.double(2.07833165902)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_pt_log_nopuppi = cms.PSet(
-                median = cms.double(0.577863454819),
-                norm_factor = cms.double(0.614248987126)
+                median = cms.double(0.6),
+                norm_factor = cms.double(0.6)
             ),
             pfcand_quality = cms.PSet(
                 median = cms.double(0.0),
                 norm_factor = cms.double(0.2)
             )
         ),
-        var_length = cms.uint32(100),
+        min_length = cms.uint32(24),
+        max_length = cms.uint32(150),
         var_names = cms.vstring(
             'pfcand_pt_log_nopuppi',
             'pfcand_e_log_nopuppi',
@@ -118,129 +118,124 @@ pfMassDecorrelatedParticleNetPreprocessParamsAK15 = cms.PSet(
         )
     ),
     pf_mask = cms.PSet(
-        input_shape = cms.vuint32(1, 1, 100),
         var_infos = cms.PSet(
             pfcand_mask = cms.PSet(
                 median = cms.double(0.0),
                 norm_factor = cms.double(1.0)
             )
         ),
-        var_length = cms.uint32(100),
+        min_length = cms.uint32(24),
+        max_length = cms.uint32(150),
         var_names = cms.vstring('pfcand_mask')
     ),
     pf_points = cms.PSet(
-        input_shape = cms.vuint32(1, 2, 100),
         var_infos = cms.PSet(
             pfcand_etarel = cms.PSet(
-                median = cms.double(-0.0385179147124),
-                norm_factor = cms.double(2.00600043717)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             pfcand_phirel = cms.PSet(
-                median = cms.double(-0.00015363653074),
-                norm_factor = cms.double(2.07833165902)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             )
         ),
-        var_length = cms.uint32(100),
+        min_length = cms.uint32(24),
+        max_length = cms.uint32(150),
         var_names = cms.vstring(
             'pfcand_etarel',
             'pfcand_phirel'
         )
     ),
     sv_features = cms.PSet(
-        input_shape = cms.vuint32(1, 12, 7),
         var_infos = cms.PSet(
             sv_abseta = cms.PSet(
-                median = cms.double(0.692841857672),
-                norm_factor = cms.double(1.36117543642)
-            ),
-            sv_costhetasvpv = cms.PSet(
-                median = cms.double(0.999670803547),
-                norm_factor = cms.double(170.088769034)
+                median = cms.double(0.7),
+                norm_factor = cms.double(1.4)
             ),
             sv_d3d = cms.PSet(
-                median = cms.double(0.378370791674),
-                norm_factor = cms.double(0.351689099492)
+                median = cms.double(0.4),
+                norm_factor = cms.double(0.3)
             ),
             sv_d3dsig = cms.PSet(
-                median = cms.double(6.71155357361),
-                norm_factor = cms.double(0.0288290198784)
+                median = cms.double(5),
+                norm_factor = cms.double(0.2)
             ),
             sv_dxy = cms.PSet(
-                median = cms.double(0.257832497358),
-                norm_factor = cms.double(0.445355413049)
+                median = cms.double(0.25),
+                norm_factor = cms.double(0.4)
             ),
             sv_dxysig = cms.PSet(
-                median = cms.double(6.6999809742),
-                norm_factor = cms.double(0.0288460696637)
+                median = cms.double(5),
+                norm_factor = cms.double(0.2)
             ),
             sv_etarel = cms.PSet(
-                median = cms.double(-0.019983493723),
-                norm_factor = cms.double(3.68221968779)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             sv_mass = cms.PSet(
-                median = cms.double(1.18094140291),
-                norm_factor = cms.double(0.531873999853)
+                median = cms.double(3),
+                norm_factor = cms.double(0.3)
             ),
             sv_normchi2 = cms.PSet(
-                median = cms.double(0.756912440062),
-                norm_factor = cms.double(0.741447745478)
+                median = cms.double(1),
+                norm_factor = cms.double(0.5)
             ),
             sv_ntracks = cms.PSet(
                 median = cms.double(3.0),
                 norm_factor = cms.double(1.0)
             ),
             sv_phirel = cms.PSet(
-                median = cms.double(0.000604838802246),
-                norm_factor = cms.double(3.76744890394)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             sv_pt_log = cms.PSet(
-                median = cms.double(3.26131427288),
-                norm_factor = cms.double(0.69510485069)
+                median = cms.double(3),
+                norm_factor = cms.double(0.6)
             )
         ),
-        var_length = cms.uint32(7),
+        min_length = cms.uint32(1),
+        max_length = cms.uint32(10),
         var_names = cms.vstring(
             'sv_pt_log',
             'sv_mass',
-            'sv_phirel',
             'sv_etarel',
+            'sv_phirel',
             'sv_abseta',
             'sv_ntracks',
             'sv_normchi2',
             'sv_dxy',
             'sv_dxysig',
             'sv_d3d',
-            'sv_d3dsig',
-            'sv_costhetasvpv'
+            'sv_d3dsig'
         )
     ),
     sv_mask = cms.PSet(
-        input_shape = cms.vuint32(1, 1, 7),
         var_infos = cms.PSet(
             sv_mask = cms.PSet(
                 median = cms.double(0.0),
                 norm_factor = cms.double(1.0)
             )
         ),
-        var_length = cms.uint32(7),
+        min_length = cms.uint32(1),
+        max_length = cms.uint32(10),
         var_names = cms.vstring('sv_mask')
     ),
     sv_points = cms.PSet(
-        input_shape = cms.vuint32(1, 2, 7),
         var_infos = cms.PSet(
             sv_etarel = cms.PSet(
-                median = cms.double(-0.019983493723),
-                norm_factor = cms.double(3.68221968779)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             ),
             sv_phirel = cms.PSet(
-                median = cms.double(0.000604838802246),
-                norm_factor = cms.double(3.76744890394)
+                median = cms.double(0),
+                norm_factor = cms.double(1)
             )
         ),
-        var_length = cms.uint32(7),
+        min_length = cms.uint32(1),
+        max_length = cms.uint32(10),
         var_names = cms.vstring(
-            'sv_phirel',
-            'sv_etarel'
+            'sv_etarel',
+            'sv_phirel'
         )
     )
 )

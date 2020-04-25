@@ -16,12 +16,18 @@ sed -i -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH"
 scram setup $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml && cmsenv
 ```
 
+### Merge CMSSW branch
+
+```bash
+git cms-merge-topic -u hqucms:particle-net-onnx-variable-len
+```
+
 ### Get customized NanoAOD producers
 
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/pfcands
+git clone ssh://git@gitlab.cern.ch:7999/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
 # alternatively, use https
-# git clone https://gitlab.cern.ch/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/pfcands
+# git clone https://gitlab.cern.ch/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
 ```
 
 ### Compile
