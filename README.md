@@ -8,14 +8,6 @@ cd CMSSW_11_1_0_pre5/src
 cmsenv
 ```
 
-### [DEV] Some configuration changes to increase processing speed
-
-```bash
-# set MLAS_DYNAMIC_CPU_ARCH=99 in ONNXRuntime 
-sed -i -e 's/name="MLAS_DYNAMIC_CPU_ARCH" value="0"/name="MLAS_DYNAMIC_CPU_ARCH" value="99"/g' $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml
-scram setup $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/onnxruntime.xml && cmsenv
-```
-
 ### Merge CMSSW branch
 
 ```bash
@@ -28,6 +20,12 @@ git cms-merge-topic -u hqucms:particle-net-onnx-variable-len
 git clone ssh://git@gitlab.cern.ch:7999/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
 # alternatively, use https
 # git clone https://gitlab.cern.ch/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
+```
+
+### [DEV] Use a faster version of ONNXRuntime
+
+```bash
+$CMSSW_BASE/src/PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
 ```
 
 ### Compile
@@ -160,11 +158,11 @@ cmsDriver.py data2018d -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --
 
 For MC:
 
-`python crab.py -p mc_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i mc_[ABC].txt --num-cores 4 -s EventAwareLumiBased -n 100000 --work-area crab_projects_mc_[ABC] --dryrun`
+`python crab.py -p mc_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i mc_[ABC].txt --num-cores 1 --send-external -s FileBased -n  --work-area crab_projects_mc_[ABC] --dryrun`
 
 For data:
 
-`python crab.py -p data_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i data.txt --num-cores 4 -s EventAwareLumiBased -n 100000 --work-area crab_projects_data --dryrun`
+`python crab.py -p data_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i data.txt --num-cores 1 --send-external -s EventAwareLumiBased -n 100000 --work-area crab_projects_data --dryrun`
 
 
 A JSON file can be applied for data samples with the `-j` options.
