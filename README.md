@@ -1,4 +1,37 @@
-# NanoTuples (Custom NanoAOD ntuple producers with DeepAK8 and DeepAK15)
+# NanoTuples
+
+Custom NanoAOD ntuple producers with additional boosted jet taggers and their PF candidates.
+
+<!-- TOC -->
+
+- [NanoTuples](#nanotuples)
+    - [Version](#version)
+    - [Setup](#setup)
+        - [Set up CMSSW](#set-up-cmssw)
+        - [Merge CMSSW branch](#merge-cmssw-branch)
+        - [Get customized NanoAOD producers](#get-customized-nanoaod-producers)
+        - [Install a faster version of ONNXRuntime](#install-a-faster-version-of-onnxruntime)
+        - [Compile](#compile)
+        - [Test](#test)
+    - [Production](#production)
+
+<!-- /TOC -->
+
+------
+
+## Version
+
+The current version is based on [NanoAODv7](https://gitlab.cern.ch/cms-nanoAOD/nanoaod-doc/-/wikis/Releases/NanoAODv7).
+
+Customizations:
+
+- [ParticleNet-MD](https://cds.cern.ch/record/2707946?ln=en) (V00) for AK8 jets
+- PF candidates for AK8 jets
+- [*not enabled by default*] AK15 jets w/ ParticleNet-MD (V01)
+
+------
+
+## Setup
 
 ### Set up CMSSW
 
@@ -17,12 +50,10 @@ git cms-merge-topic -u hqucms:particle-net-onnx-variable-len
 ### Get customized NanoAOD producers
 
 ```bash
-git clone ssh://git@gitlab.cern.ch:7999/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
-# alternatively, use https
-# git clone https://gitlab.cern.ch/cms-hcc/NanoTuples.git PhysicsTools/NanoTuples -b prod/11X/particle-net-V01
+git clone https://github.com/hqucms/NanoTuples.git PhysicsTools/NanoTuples -b production/master
 ```
 
-### [DEV] Use a faster version of ONNXRuntime
+### Install a faster version of ONNXRuntime
 
 ```bash
 $CMSSW_BASE/src/PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
@@ -94,8 +125,9 @@ cmsDriver.py test_nanoTuples_data2018d -n 1000 --data --eventcontent NANOAOD --d
 less +F test_data2018b.log
 ```
 
+------
 
-### Production
+## Production
 
 **Step 0**: switch to the crab production directory and set up grid proxy, CRAB environment, etc.
 
@@ -104,7 +136,7 @@ cd $CMSSW_BASE/src/PhysicsTools/NanoTuples/crab
 # set up grid proxy
 voms-proxy-init -rfc -voms cms --valid 168:00
 # set up CRAB env (must be done after cmsenv)
-source /cvmfs/cms.cern.ch/crab3/crab.sh
+source /cvmfs/cms.cern.ch/common/crab-setup.sh
 ```
 
 **Step 1**: generate the python config file with `cmsDriver.py` with the following commands:
@@ -158,11 +190,11 @@ cmsDriver.py data2018d -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --
 
 For MC:
 
-`python crab.py -p mc_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i mc_[ABC].txt --num-cores 1 --send-external -s FileBased -n  --work-area crab_projects_mc_[ABC] --dryrun`
+`python crab.py -p mc_NANO.py --site T2_CH_CERN -o /store/user/$USER/outputdir -t NanoTuples-[version] -i mc.txt --num-cores 1 --send-external -s FileBased -n 2 --work-area crab_projects_mc --dryrun`
 
 For data:
 
-`python crab.py -p data_NANO.py -o /store/user/$USER/outputdir -t NanoTuples-[version] -i data.txt --num-cores 1 --send-external -s EventAwareLumiBased -n 100000 --work-area crab_projects_data --dryrun`
+`python crab.py -p data_NANO.py --site T2_CH_CERN -o /store/user/$USER/outputdir -t NanoTuples-[version] -i data.txt --num-cores 1 --send-external -s EventAwareLumiBased -n 100000 -j [json_file] --work-area crab_projects_data --dryrun`
 
 
 A JSON file can be applied for data samples with the `-j` options.
@@ -192,17 +224,17 @@ These command will perform a "dryrun" to print out the CRAB configuration files.
 The status of the CRAB jobs can be checked with:
 
 ```bash
-./crab.py --status --work-area crab_projects_[ABC]
+./crab.py --status --work-area crab_projects_*  --options "maxjobruntime=2500 maxmemory=2500" && ./crab.py --summary
 ```
 
-Note that this will also resubmit failed jobs automatically.
+Note that this will also **resubmit** failed jobs automatically.
 
 The crab dashboard can also be used to get a quick overview of the job status:
-`https://dashb-cms-job.cern.ch/dashboard/templates/task-analysis`
+
+- [https://monit-grafana.cern.ch/d/cmsTMGlobal/cms-tasks-monitoring-globalview?orgId=11](https://monit-grafana.cern.ch/d/cmsTMGlobal/cms-tasks-monitoring-globalview?orgId=11)
 
 More options of this `crab.py` script can be found with:
 
 ```bash
 ./crab.py -h
 ```
-
