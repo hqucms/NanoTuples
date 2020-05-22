@@ -63,15 +63,20 @@ def _fix_tau_global_tag(process):
     return process
 
 
-def nanoTuples_customizeCommon(process, runOnMC):
-    setupAK15(process, runOnMC=runOnMC)
-    addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True)
-    addPFCands(process,
-               srcs=('ak15WithUserData', 'updatedJetsAK8WithUserData'),
-               isPuppiJets=(True, True),
-               jetTables=('ak15Table', 'fatJetTable'),
-               outTableName='PFCands',
-               )
+def nanoTuples_customizeCommon(process, runOnMC, addAK15=False, addAK8=True, addPFcands=True):
+    pfcand_params = {'srcs': [], 'isPuppiJets':[], 'jetTables':[]}
+    if addAK15:
+        setupAK15(process, runOnMC=runOnMC)
+        pfcand_params['srcs'].append('ak15WithUserData')
+        pfcand_params['isPuppiJets'].append(True)
+        pfcand_params['jetTables'].append('ak15Table')
+    if addAK8:
+        addParticleNetAK8(process, runParticleNet=False, runParticleNetMD=True)
+        pfcand_params['srcs'].append('updatedJetsAK8WithUserData')
+        pfcand_params['isPuppiJets'].append(True)
+        pfcand_params['jetTables'].append('fatJetTable')
+    if addPFcands:
+        addPFCands(process, outTableName='PFCands', **pfcand_params)
 
     nanoTuples_customizeVectexTable(process)
     nanoTuples_customizeMetTable(process)
