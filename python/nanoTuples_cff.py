@@ -63,7 +63,7 @@ def _fix_tau_global_tag(process):
     return process
 
 
-def nanoTuples_customizeCommon(process, runOnMC, addAK15=False, addAK8=True, addPFcands=True):
+def nanoTuples_customizeCommon(process, runOnMC, addAK15=True, addAK8=True, addPFcands=True):
     pfcand_params = {'srcs': [], 'isPuppiJets':[], 'jetTables':[]}
     if addAK15:
         setupAK15(process, runOnMC=runOnMC)
