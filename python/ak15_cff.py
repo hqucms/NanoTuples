@@ -1,7 +1,4 @@
 import FWCore.ParameterSet.Config as cms
-from Configuration.Eras.Modifier_run2_jme_2016_cff import run2_jme_2016
-from Configuration.Eras.Modifier_run2_jme_2017_cff import run2_jme_2017
-
 from PhysicsTools.NanoAOD.common_cff import *
 
 # ---------------------------------------------------------
@@ -37,9 +34,7 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
         process.ak15GenJetsNoNuSoftDrop.jetPtMin = 100
 
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
-    from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs as pfParticleNetJetTagsProbs
-    ak15_flav_names = ["probQCDothers", "probXbb", "probXcc", "probXqq"]  # FIXME
-    pfMassDecorrelatedParticleNetJetTagsProbs = ['pfMassDecorrelatedParticleNetJetTags:' + n for n in ak15_flav_names]  # FIXME
+    from RecoBTag.ONNXRuntime.pfParticleNet_cff import _pfMassDecorrelatedParticleNetJetTagsProbs as pfMassDecorrelatedParticleNetJetTagsProbs
 
     if runParticleNet:
         bTagDiscriminators += pfParticleNetJetTagsProbs
@@ -56,41 +51,23 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     )
 
     # configure DeepAK15
-    from RecoBTag.ONNXRuntime.pfDeepBoostedJetTags_cfi import pfDeepBoostedJetTags as _pfDeepBoostedJetTags
     if runParticleNet:
         process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
-        from PhysicsTools.NanoTuples.pfParticleNetPreprocessParamsAK15_cfi import pfParticleNetPreprocessParamsAK15
-        process.pfParticleNetJetTagsAK15ParticleNet.preprocessParams = pfParticleNetPreprocessParamsAK15
-        process.pfParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-symbol.json'
-        process.pfParticleNetJetTagsAK15ParticleNet.param_path = 'PhysicsTools/NanoTuples/data/ParticleNet/ak15/ParticleNet-0000.params'
+        process.pfParticleNetJetTagsAK15ParticleNet.preprocess_json = 'none'
+        process.pfParticleNetJetTagsAK15ParticleNet.model_path = 'none'
 
     if runParticleNetMD:
         process.pfParticleNetTagInfosAK15ParticleNet.jet_radius = 1.5
-        from PhysicsTools.NanoTuples.pfMassDecorrelatedParticleNetPreprocessParamsAK15_cfi import pfMassDecorrelatedParticleNetPreprocessParamsAK15
-        # FIXME
-        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet = _pfDeepBoostedJetTags.clone(
-            src = process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.src,
-            flav_names = ak15_flav_names,
-            preprocessParams = pfMassDecorrelatedParticleNetPreprocessParamsAK15,
-            model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/ParticleNetMD.onnx',
-#             debugMode=True
-            )
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.preprocess_json = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/V02d/preprocess.json'
+        process.pfMassDecorrelatedParticleNetJetTagsAK15ParticleNet.model_path = 'PhysicsTools/NanoTuples/data/ParticleNet-MD/ak15/V02d/particle-net.onnx'
 
     # src
     srcJets = cms.InputTag('selectedUpdatedPatJetsAK15ParticleNet')
 
     # jetID
-    process.looseJetIdAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
-        filterParams=cms.PSet(
-            version=cms.string('WINTER16'),
-            quality=cms.string('LOOSE'),
-        ),
-        src=srcJets
-    )
-
     process.tightJetIdAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
         filterParams=cms.PSet(
-            version=cms.string('SUMMER18PUPPI'),
+            version=cms.string('RUN2ULPUPPI'),
             quality=cms.string('TIGHT'),
         ),
         src=srcJets
@@ -98,16 +75,11 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
 
     process.tightJetIdLepVetoAK15Puppi = cms.EDProducer("PatJetIDValueMapProducer",
         filterParams=cms.PSet(
-            version=cms.string('SUMMER18PUPPI'),
+            version=cms.string('RUN2ULPUPPI'),
             quality=cms.string('TIGHTLEPVETO'),
         ),
         src=srcJets
     )
-
-    run2_jme_2016.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER16")
-    run2_jme_2016.toModify(process.tightJetIdLepVetoAK15Puppi.filterParams, version="WINTER16")
-    run2_jme_2017.toModify(process.tightJetIdAK15Puppi.filterParams, version="WINTER17PUPPI")
-    run2_jme_2017.toModify(process.tightJetIdLepVetoAK15Puppi.filterParams, version="WINTER17PUPPI")
 
     process.ak15WithUserData = cms.EDProducer("PATJetUserDataEmbedder",
         src=srcJets,
@@ -116,10 +88,6 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
             tightId=cms.InputTag("tightJetIdAK15Puppi"),
             tightIdLepVeto=cms.InputTag("tightJetIdLepVetoAK15Puppi"),
         ),
-    )
-    run2_jme_2016.toModify(process.ak15WithUserData.userInts,
-        looseId=cms.InputTag("looseJetIdAK15Puppi"),
-        tightIdLepVeto=None,
     )
 
     process.ak15Table = cms.EDProducer("SimpleCandidateFlatTableProducer",
@@ -149,7 +117,6 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
                  doc="index of second subjet"),
         )
     )
-    run2_jme_2016.toModify(process.ak15Table.variables, jetId=Var("userInt('tightId')*2+userInt('looseId')", int, doc="Jet ID flags bit1 is loose, bit2 is tight"))
     process.ak15Table.variables.pt.precision = 10
 
     # add nominal taggers
@@ -162,7 +129,6 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
     if runParticleNetMD:
         for prob in pfMassDecorrelatedParticleNetJetTagsProbs:
             name = 'ParticleNetMD_' + prob.split(':')[1]
-            name = name.replace('QCDothers', 'QCD')  # FIXME
             setattr(process.ak15Table.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
     process.ak15SubJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
@@ -224,10 +190,6 @@ def setupAK15(process, runOnMC=False, path=None, runParticleNet=False, runPartic
         process.jetMC.remove(process.patJetPartons)
         process.ak15Task.add(process.patJetPartons)
         ###############################################
-
-    _ak15Task_2016 = process.ak15Task.copy()
-    _ak15Task_2016.replace(process.tightJetIdLepVetoAK15Puppi, process.looseJetIdAK15Puppi)
-    run2_jme_2016.toReplaceWith(process.ak15Task, _ak15Task_2016)
 
     if path is None:
         process.schedule.associate(process.ak15Task)
