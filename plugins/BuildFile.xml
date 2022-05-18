@@ -1,5 +1,6 @@
 <use name="FWCore/Framework"/>
 <library file="*.cc" name="PhysicsToolsNanoTuplesPlugins">
+  <use name="DataFormats/Candidate"/>
   <use name="DataFormats/PatCandidates"/>
   <use name="DataFormats/NanoAOD"/>
   <use name="CommonTools/Utils"/>
