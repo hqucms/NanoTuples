@@ -84,7 +84,7 @@ cmsDriver.py test_nanoTuples_data2017 -n 1000 --data --eventcontent NANOAOD --da
 less +F test_data2017.log
 ```
 
-MC (2018):
+MC (UL18):
 
 ```bash
 cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIISummer20UL18MiniAODv2/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/00000/004EF875-ACBB-FE45-B86B-EAF83448CE62.root --fileout file:nano_mc2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2018.log &
@@ -92,7 +92,7 @@ cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --dat
 less +F test_mc2018.log
 ```
 
-Data (2018):
+Data (UL18):
 
 ```bash
 cmsDriver.py test_nanoTuples_data2018 -n 1000 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 106X_dataRun2_v35 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein /store/data/Run2018C/SingleMuon/MINIAOD/UL2018_MiniAODv2_GT36-v2/2530000/003EFE78-9748-DC43-BB97-14236C25C5FA.root --fileout file:nano_data2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_data2018.log &
@@ -140,13 +140,13 @@ Data (2017, 94X, MiniAODv2):
 cmsDriver.py data2017 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
-MC (2018):
+MC (UL18):
 
 ```bash
 cmsDriver.py mc2018 -n -1 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
 
-Data (2018):
+Data (UL18):
 
 ```bash
 cmsDriver.py data2018abc -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 106X_dataRun2_v35 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
@@ -164,19 +164,19 @@ For data:
 
 A JSON file can be applied for data samples with the `-j` options.
 
-Golden JSON, 2016:
+Golden JSON, UL16:
 
 ```
 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions16/13TeV/Legacy_2016/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt
 ```
 
-Golden JSON, 2017:
+Golden JSON, UL17:
 
 ```
 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt
 ```
 
-Golden JSON, 2018:
+Golden JSON, UL18:
 
 ```
 https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions18/13TeV/Legacy_2018/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt
