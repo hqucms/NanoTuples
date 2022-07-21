@@ -8,7 +8,7 @@ def nanoTuples_customizeCommon(process, runOnMC):
     from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsProbs
     for prob in _pfParticleNetAK4JetTagsProbs:
         name = 'ParticleNetAK4_' + prob.split(':')[1]
-        setattr(process.jetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+        setattr(process.jetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=10))
 
     # add PFCands for SV tagging
     addSVPFCands(process)
