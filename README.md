@@ -52,7 +52,7 @@ git cms-merge-topic -u gouskos:pnet_ak8_new_collection
 ### Get customized NanoAOD producers
 
 ```bash
-git clone https://github.com/hqucms/NanoTuples.git PhysicsTools/NanoTuples -b production/sv_tagging
+git clone https://github.com/hqucms/NanoTuples.git PhysicsTools/NanoTuples --recursive -b production/sv_tagging
 ```
 
 ### Compile
