@@ -7,7 +7,8 @@ Custom NanoAOD ntuple producers with additional jet taggers and PF candidates.
 - [NanoTuples (SV)](#nanotuples-sv)
     - [Version](#version)
     - [Setup](#setup)
-        - [Set up CMSSW](#set-up-cmssw)
+        - [Set up CMSSW (Official NanoAODv9)](#set-up-cmssw-official-nanoaodv9)
+        - [Set up CMSSW (Official NanoAODv9 + New ParticleNet with Tau)](#set-up-cmssw-official-nanoaodv9--new-particlenet-with-tau)
         - [Get customized NanoAOD producers](#get-customized-nanoaod-producers)
         - [Compile](#compile)
         - [Test](#test)
@@ -29,13 +30,23 @@ Customizations:
 ---
 
 ## Setup
-
-### Set up CMSSW
+<!-- 
+### Set up CMSSW (Official NanoAODv9)
 
 ```bash
 cmsrel CMSSW_10_6_26
 cd CMSSW_10_6_26/src
 cmsenv
+```
+ -->
+### Set up CMSSW (Official NanoAODv9 + New ParticleNet with Tau)
+
+```bash
+cmsrel CMSSW_10_6_30
+cd CMSSW_10_6_30/src
+cmsenv
+
+git cms-merge-topic -u gouskos:pnet_ak8_new_collection
 ```
 
 ### Get customized NanoAOD producers
@@ -51,7 +62,7 @@ scram b -j16
 ```
 
 ### Test
-
+<!-- 
 MC (2016, 94X, MiniAODv3):
 
 ```bash
@@ -83,7 +94,7 @@ cmsDriver.py test_nanoTuples_data2017 -n 1000 --data --eventcontent NANOAOD --da
 
 less +F test_data2017.log
 ```
-
+ -->
 MC (UL18):
 
 ```bash
@@ -115,7 +126,7 @@ source /cvmfs/cms.cern.ch/common/crab-setup.sh
 ```
 
 **Step 1**: generate the python config file with `cmsDriver.py` with the following commands:
-
+<!-- 
 MC (2016, 94X, MiniAODv3):
 
 ```bash
@@ -139,7 +150,7 @@ Data (2017, 94X, MiniAODv2):
 ```bash
 cmsDriver.py data2017 -n -1 --data --eventcontent NANOAOD --datatier NANOAOD --conditions 102X_dataRun2_v13 --step NANO --nThreads 1 --era Run2_2017,run2_nanoAOD_94XMiniAODv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --filein file:step-1.root --fileout file:nano.root --no_exec
 ```
-
+ -->
 MC (UL18):
 
 ```bash
